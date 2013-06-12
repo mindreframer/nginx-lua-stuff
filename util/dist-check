@@ -1,0 +1,114 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Std qw(getopts);
+use Cwd qw/cwd/;
+
+sub sh ($);
+
+my %opts;
+getopts("lf:", \%opts) or die "Usage: $0 [-f] <cores>\n";
+
+my $jobs = shift || 4;
+
+my $cwd = cwd();
+if ($cwd !~ /ngx_openresty-(\d+(?:\.\d+)+(?:rc\d+)?)$/) {
+    die "Bad current working directory: $cwd\n";
+}
+
+my $ver = $1;
+
+my ($make, $lua);
+
+if ($^O eq 'freebsd' || $^O eq 'solaris') {
+    $make = 'gmake';
+
+} else {
+    $make = 'make';
+}
+
+my $cfg_opts = "--with-http_iconv_module";
+
+if ($opts{l}) {
+    $lua = 'Lua';
+
+} else {
+    $lua = 'LuaJIT';
+    $cfg_opts .= " --with-luajit";
+}
+
+my $prefix;
+
+warn "=== No Pool Build ===\n";
+$prefix = "/usr/local/openresty-nopool";
+unless ($opts{f}) {
+    sh "./configure --with-no-pool-patch $cfg_opts --prefix=$prefix -j$jobs > /dev/null";
+}
+sh "$make -j$jobs > /dev/null";
+sh "sudo $make install > /dev/null";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep $ver";
+#sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep '\\--with-no-pool-patch'";
+system "sudo killall nginx > /dev/null 2>&1";
+sh "sudo $prefix/nginx/sbin/nginx";
+sh "curl -si localhost/lua|grep $lua";
+sh "curl -si localhost/lua|grep $ver";
+sh "curl -si localhost/lua|grep 'no pool'";
+sh "sudo $prefix/nginx/sbin/nginx -sstop";
+
+warn "\n=== Normal Build ===\n";
+$prefix = "/usr/local/openresty";
+unless ($opts{f}) {
+    sh "./configure $cfg_opts -j$jobs > /dev/null";
+}
+sh "$make -j$jobs > /dev/null";
+sh "sudo $make install > /dev/null";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep $ver";
+system "sudo killall nginx > /dev/null 2>&1";
+sh "sudo $prefix/nginx/sbin/nginx";
+sh "curl -si localhost/lua|grep $lua";
+sh "curl -si localhost/lua|grep $ver";
+sh "sudo $prefix/nginx/sbin/nginx -sstop";
+
+warn "\n=== Debug Build ===\n";
+$prefix = "/usr/local/openresty-debug";
+unless ($opts{f}) {
+    sh "./configure --with-debug $cfg_opts --prefix=$prefix -j$jobs > /dev/null";
+}
+sh "$make -j$jobs > /dev/null";
+sh "sudo $make install > /dev/null";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep $ver";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep '\\--with-debug'";
+system "sudo killall nginx > /dev/null 2>&1";
+sh "sudo $prefix/nginx/sbin/nginx";
+sh "curl -si localhost/lua|grep $lua";
+sh "curl -si localhost/lua|grep $ver";
+sh "sudo $prefix/nginx/sbin/nginx -sstop";
+
+warn "\n=== DTrace Build ===\n";
+$prefix = "/usr/local/openresty-dtrace";
+unless ($opts{f}) {
+    sh "./configure $cfg_opts --with-dtrace-probes --prefix=$prefix -j$jobs > /dev/null";
+}
+sh "$make -j$jobs > /dev/null";
+sh "sudo $make install > /dev/null";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep $ver";
+sh "$prefix/nginx/sbin/nginx -V 2>&1 |grep '\\--with-dtrace-probes'";
+system "sudo killall nginx > /dev/null 2>&1";
+sh "sudo $prefix/nginx/sbin/nginx";
+sh "curl -si localhost/lua|grep $lua";
+sh "curl -si localhost/lua|grep $ver";
+if ($^O eq 'linux') {
+    sh "stap -L 'process(\"$prefix/nginx/sbin/nginx\").mark(\"*\")'|grep http__lua__coroutine__done";
+
+} elsif ($^O eq 'freebsd' || $^O eq 'darwin' || $^O eq 'solaris') {
+    sh "sudo dtrace -l|grep http-lua-coroutine-done";
+}
+
+sh "sudo $prefix/nginx/sbin/nginx -sstop";
+
+sub sh ($) {
+    my $cmd = shift;
+    system($cmd) == 0 or die "Command \"$cmd\" failed";
+}
