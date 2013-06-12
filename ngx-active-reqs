@@ -1,0 +1,517 @@
+#!/usr/bin/env perl
+
+# Copyright (C) Yichun Zhang (agentzh)
+
+use 5.006001;
+use strict;
+use warnings;
+
+use Getopt::Std qw( getopts );
+
+my %opts;
+
+getopts("c:ua:dhp:mk", \%opts)
+    or die usage();
+
+if ($opts{h}) {
+    print usage();
+    exit;
+}
+
+my $pid = $opts{p}
+    or die "No nginx process pid specified by the -p option\n";
+
+if ($pid !~ /^\d+$/) {
+    die "Bad -p option value \"$pid\": not look like a pid\n";
+}
+
+my $child_pids = get_child_processes($pid);
+if (!@$child_pids) {
+    push @$child_pids, $pid;
+}
+
+my $condition = gen_pid_test_condition($child_pids);
+
+my $check_pools = $opts{m};
+
+my $check_upstreams = $opts{u};
+
+my $keep_waiting = $opts{k} || 0;
+
+my $stap_args = $opts{a} || '';
+
+my $conn_fd = $opts{c} || 0;
+
+if ($^O ne 'linux') {
+    die "Only linux is supported but I am on $^O.\n";
+}
+
+my $exec_file = "/proc/$pid/exe";
+if (!-f $exec_file) {
+    die "Nginx process $pid is not running or ",
+        "you do not have enough permissions.\n";
+}
+
+my $nginx_path = readlink $exec_file;
+
+my $ver = `stap --version 2>&1`;
+if (!defined $ver) {
+    die "Systemtap not installed or its \"stap\" utility is not visible to the PATH environment: $!\n";
+}
+
+if ($ver =~ /version\s+(\d+\.\d+)/i) {
+    my $v = $1;
+    if ($v < 2.1) {
+        die "ERROR: at least systemtap 2.1 is required but found $v\n";
+    }
+
+} else {
+    die "ERROR: unknown version of systemtap:\n$ver\n";
+}
+
+my $stap_src;
+
+my $preamble;
+if (@$child_pids == 1) {
+    $preamble = <<_EOC_;
+probe begin {
+    printf("Tracing %d ($nginx_path)...\\n\\n", target())
+}
+_EOC_
+
+} else {
+    $preamble = <<_EOC_;
+probe begin {
+    printf("Tracing @$child_pids ($nginx_path)...\\n\\n")
+}
+_EOC_
+}
+
+#chop $preamble;
+
+my $c = '@cast(c, "ngx_connection_t")';
+my $r = '@cast(r, "ngx_http_request_t")';
+my $u = '@cast(u, "ngx_http_upstream_t")';
+my $p = '@cast(p, "ngx_event_pipe_t")';
+
+my $need_blank_line;
+
+my ($check_upstream_code, $check_pool_init_code, $check_pool_code);
+
+my $fin_code = '';
+
+if ($check_upstreams) {
+    $need_blank_line = 1;
+
+    $preamble .= <<'_EOC_';
+global funcs
+_EOC_
+
+    $check_upstream_code = <<_EOC_;
+        u = $r->upstream
+        if (u) {
+            c = $u->peer->connection
+            if (c) {
+                printf("    upstream conn: ssl=%d, fd=%d, buffered=%x, err=%d, action=%s\\n",
+                       \@defined($c->ssl) ? $c->ssl : 0, $c->fd,
+                       $c->buffered,
+                       $c->error, user_string($c->log->action))
+
+                printf("    upstream read: ready=%d, active=%d, timer_set=%d, timedout=%d, eof=%d, error=%d\\n",
+                       $c->read->ready, $c->read->active, $c->read->timer_set,
+                       $c->read->timedout, $c->read->eof, $c->read->error)
+
+                printf("    upstream write: ready=%d, active=%d, timer_set=%d, timedout=%d, eof=%d, error=%d\\n",
+                       $c->write->ready, $c->write->active, $c->write->timer_set,
+                       $c->write->timedout, $c->write->eof, $c->write->error)
+
+            } else {
+                printf("    no upstream conn found\\n")
+            }
+
+            rev_handler = $u->read_event_handler
+            if (rev_handler) {
+                rev_handler_name = usymname(rev_handler)
+                funcs[rev_handler] = rev_handler_name
+            }
+
+            wev_handler = $u->write_event_handler
+            if (wev_handler) {
+                wev_handler_name = usymname(wev_handler)
+                funcs[wev_handler] = wev_handler_name
+            }
+
+            printf("    upstream read/write ev handlers: %s %s\\n", rev_handler_name, wev_handler_name)
+
+            p = $u->pipe
+            if (p) {
+                printf("    upstream pipe: done=%d, eof=%d, err=%d\\n",
+                       $p->upstream_done, $p->upstream_eof, $p->upstream_error)
+            }
+
+            printf("    upstream headers in: status=%d, content_length=%d, conn_close=%d, chunked=%d\\n",
+                   $u->headers_in->status_n,
+                   $u->headers_in->content_length_n,
+                   $u->headers_in->connection_close,
+                   $u->headers_in->chunked)
+
+            pos = $u->buffer->pos
+            last = $u->buffer->last
+            end = $u->buffer->end
+            size = last - pos
+            if (size) {
+                if (size > 40) {
+                    data = text_str(user_string_n(pos, 20) . "..." . user_string_n(last - 20 , 20))
+
+                } else {
+                    data = text_str(user_string_n(pos, size))
+                }
+
+            } else {
+                data = ""
+            }
+
+            printf("    upstream buffer: len=%d, data=\\"%s\\", free=%d, size=%d\\n",
+                   size, data, end - last, end - $u->buffer->start)
+
+            if ($u->state) {
+                printf("    upstream state: resp_len=%d\\n", $u->state->response_length)
+            }
+
+            printf("    upstream: length=%d, busy_bufs=%p, out_bufs=%p\\n", $u->length,
+                   $u->busy_bufs, $u->out_bufs)
+
+        } else {
+            printf("    no upstream found\\n")
+        }
+_EOC_
+
+    $fin_code .= "    delete funcs\n";
+
+} else {
+    $check_upstream_code = '';
+}
+
+if ($check_pools) {
+    $need_blank_line = 1;
+
+    $check_pool_init_code = <<_EOC_;
+        ngx_pool_t_size = &\@cast(0, "ngx_pool_t")[1]
+        size_t_size = &\@cast(0, "size_t")[1]
+
+        total_mem_for_reqs = 0
+_EOC_
+    chop $check_pool_init_code;
+
+    $check_pool_code = <<_EOC_;
+            pool = \@cast(r, "ngx_http_request_t")->pool
+
+            if (!pool) {
+                printf("    pool is null\\n")
+                continue
+            }
+
+            end = \@cast(pool, "ngx_pool_t")->d->end
+
+            printf("    pool chunk size: %d\\n", end - pool)
+
+            lim = \@cast(pool, "ngx_pool_t")->max + 1
+
+            /* analyze small blocks */
+
+            used = 0
+            unused = 0
+
+            p = pool
+            n = \@cast(pool, "ngx_pool_t")->d->next
+
+            for ( ;; ) {
+
+                last = \@cast(p, "ngx_pool_t")->d->last
+                end = \@cast(p, "ngx_pool_t")->d->end
+
+                used += last - p - ngx_pool_t_size
+                unused += end - last
+
+                /* printf("used: %d, unused %d\\n", last - p - ngx_pool_t_size, end - last) */
+
+                if (n == 0) {
+                    break
+                }
+
+                p = n
+                n = \@cast(n, "ngx_pool_t")->d->next
+            }
+
+            printf("    small blocks (< %d): %d bytes used, %d bytes unused\\n",
+                   lim, used, unused)
+
+            /* analyze large blocks */
+
+            total = 0
+            blocks = 0
+
+            for (l = \@cast(pool, "ngx_pool_t")->large;
+                 l;
+                 l = \@cast(l, "ngx_pool_large_t")->next)
+            {
+                ptr = \@cast(l, "ngx_pool_large_t")->alloc
+                if (ptr) {
+                    blocks++
+
+                    /* XXX specific to the glibc malloc implementation */
+                    ptr -= size_t_size
+                    block_size = \@cast(ptr, "size_t")[0] & ~(size_t_size - 1)
+                    /* printf("large block size: %d %d\\n",
+                              \@cast(ptr, "size_t")[0], block_size) */
+
+                    total += block_size
+                }
+            }
+
+            printf("    large blocks (>= %d): %d blocks, %d bytes (used)\\n",
+                   lim, blocks, total)
+
+            /* total summary */
+
+            printf("    total used: %d bytes\\n", total + used)
+
+            total_mem_for_reqs += total + used
+_EOC_
+    chop $check_pool_code;
+
+    $fin_code .= <<_EOC_;
+        printf("total memory used for all %d active requests: %d bytes\\n",
+               nreqs, total_mem_for_reqs)
+_EOC_
+    chop $fin_code;
+
+} else {
+    $check_pool_init_code = '';
+    $check_pool_code = '';
+    $fin_code .= <<_EOC_;
+        printf("\\nfound %d active requests.\\n", nreqs)
+_EOC_
+    chop $fin_code;
+}
+
+my $formatting_code = '';
+if ($need_blank_line) {
+    $formatting_code = qq{    printf("\\n")\n};
+}
+
+$stap_src = <<_EOC_;
+$preamble
+
+probe process("$nginx_path").function("ngx_process_events_and_timers"),
+    process("$nginx_path").function("ngx_http_handler")
+{
+    my_pid = pid()
+    if ($condition) {
+
+        begin = local_clock_us()
+
+$check_pool_init_code
+
+        cached_sec = \@var("ngx_cached_time")->sec
+        cached_msec = \@var("ngx_cached_time")->msec
+
+        conns = \@var("ngx_cycle\@ngx_cycle.c")->connections
+        conn_n = \@var("ngx_cycle\@ngx_cycle.c")->connection_n
+
+        nreqs = 0
+        for (i = 0; i < conn_n; i++) {
+            c = &\@cast(conns, "ngx_connection_t")[i]
+
+            fd = $c->fd
+
+            read = $c->read
+            reqs = $c->requests
+            destroyed = $c->destroyed
+
+            if (reqs && fd != -1 && read && !destroyed) {
+                r = $c->data
+
+                if ($conn_fd && $conn_fd != fd) {
+                    if (!$r->upstream) {
+                        continue
+                    }
+
+                    c = $r->upstream->peer->connection
+                    if (!c) {
+                        continue
+                    }
+
+                    if ($c->fd != $conn_fd) {
+                        continue
+                    }
+                }
+
+                nreqs++
+
+                /* get uri */
+
+                uri = &$r->uri
+                uri_data = \@cast(uri, "ngx_str_t")->data
+                uri_len = \@cast(uri, "ngx_str_t")->len
+
+                /* get uri args */
+
+                args = &$r->args
+                args_data = \@cast(args, "ngx_str_t")->data
+                args_len = \@cast(args, "ngx_str_t")->len
+
+                if (args_len == 0) {
+                    args_str = ""
+
+                } else {
+                    args_str = user_string_n(args_data, args_len)
+                }
+
+                /* get request time */
+
+                start_sec = $r->start_sec
+                start_msec = $r->start_msec
+
+                ms = (cached_sec - start_sec) * 1000 + (cached_msec - start_msec)
+                if (ms < 0) {
+                    ms = 0
+                }
+
+                /* get host */
+
+                host = $r->headers_in->host
+                if (host) {
+                    host_name = user_string_n($r->headers_in->host->value->data, $r->headers_in->host->value->len)
+
+                } else {
+                    host_name = ""
+                }
+
+                /* get method name */
+
+                method = &$r->method_name
+                method_data = \@cast(method, "ngx_str_t")->data
+                method_len = \@cast(method, "ngx_str_t")->len
+
+                /* get main request */
+
+                main = $r->main
+
+                printf("%s \\"%s %s\?%s\\", r=%p, keepalive=%d, spdy=%d, host=%s, status=%d, time=%d.%03ds, buffered=%x, conn: ssl=%d, from=%s, reqs=%d, err=%d, fd=%d, buffered=%x, %s\\n",
+                       main == r ? "req" : "subreq",
+                       user_string_n(method_data, method_len),
+                       user_string_n(uri_data, uri_len), args_str,
+                       r,
+                       $r->keepalive,
+                       \@defined($r->spdy_stream) ? $r->spdy_stream != 0 : 0,
+                       host_name, $r->headers_out->status,
+                       ms / 1000, ms % 1000,
+                       $r->buffered,
+                       \@defined($c->ssl) ? $c->ssl : 0,
+                       user_string_n($c->addr_text->data, $c->addr_text->len),
+                       reqs, $c->error, fd,
+                       $c->buffered,
+                       user_string($c->log->action))
+
+$check_pool_code
+$check_upstream_code
+$formatting_code
+
+                if ($conn_fd) {
+                    break
+                }
+            }
+        }
+
+$fin_code
+
+        elapsed = local_clock_us() - begin
+        printf("%d microseconds elapsed in the probe handler.\\n", elapsed)
+        if (nreqs || !$keep_waiting) {
+            exit()
+        }
+    } /* $condition */
+}
+_EOC_
+
+if ($opts{d}) {
+    print $stap_src;
+    exit;
+}
+
+my @opts;
+if (@$child_pids == 1) {
+    push @opts, '-x', $child_pids->[0];
+}
+
+open my $in, "|stap --skip-badvars @opts $stap_args -"
+    or die "Cannot run stap: $!\n";
+
+print $in $stap_src;
+
+close $in;
+
+sub usage {
+    return <<'_EOC_';
+Usage:
+    ngx-active-reqs [optoins]
+
+Options:
+    -a <args>           Pass extra arguments to the stap utility.
+    -c <fd>             Specify the file descriptor number of a downstream
+                        or upstream connection to filter the requests.
+    -d                  Dump out the systemtap script source.
+    -h                  Print this usage.
+    -k                  When no active rquests are found in the current
+                        event cycle, this option will keep probing at
+                        subsequent cycles, instead of quitting immediately.
+    -m                  Gather the information about request memory pools.
+    -p <pid>            Specify the nginx worker or master process pid.
+    -u                  Enable upstream information dump.
+
+Examples:
+    ngx-active-reqs -p 12345
+    ngx-active-reqs -p 12345 -k
+    ngx-active-reqs -p 12345 -m
+    ngx-active-reqs -p 12345 -m -a '-DMAXACTION=100000'
+    ngx-active-reqs -p 12345 -u
+_EOC_
+}
+
+sub get_child_processes {
+    my $pid = shift;
+    my @files = glob "/proc/[0-9]*/stat";
+    my @children;
+    for my $file (@files) {
+        #print "file: $file\n";
+        if ($file =~ m{^/proc/$pid/}) {
+            next;
+        }
+
+        open my $in, $file or next;
+        my $line = <$in>;
+        close $in;
+        if ($line =~ /^(\d+) \S+ \S+ (\d+)/) {
+            my ($child, $parent) = ($1, $2);
+            if ($parent eq $pid) {
+                push @children, $child;
+            }
+        }
+    }
+
+    @children = sort { $a <=> $b } @children;
+    return \@children;
+}
+
+sub gen_pid_test_condition {
+    my $pids = shift;
+    if (@$pids == 1) {
+        return '(my_pid == target())';
+    }
+    my @c;
+    for my $pid (@$pids) {
+        push @c, "my_pid == $pid";
+    }
+    return '(' . join(" || ", @c) . ')';
+}
