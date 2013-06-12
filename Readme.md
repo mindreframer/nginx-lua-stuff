@@ -51,3 +51,7 @@ Examples for OpenResty:
   - https://github.com/agentzh/mysql-driver-benchmark (with MySQL)
   - https://gist.github.com/justincormack/948423 (proxy to AWS, with crypto stuff)
   - https://github.com/torhve/Amatyr (Postgres + Webapp)
+
+
+## Nginx general:
+  - [Настраиваем NGINX для мультиязычных сайтов](http://habrahabr.ru/company/ruvpn/blog/183060/)
