@@ -1,0 +1,328 @@
+@import url(//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,600italic);
+
+body {
+    color: #222;
+    font: 15px/22px 'Open Sans',Arial,Helvetica,sans-serif;
+    background-color: #fdfdfd;
+    background: url(/static/pattern.png) repeat;
+    margin-bottom: 30px;
+}
+.row-fluid {
+    background-color: #fafafa;
+    padding: 10px;
+    border-radius: 5px;
+}
+h5 {
+    font-size: 16px;
+    font-weight: 300;
+}
+.navbar.main .navbar-inner {
+    border: 0;
+    border-bottom: 1px solid #d4d4d4;
+    border-radius: 0;
+}
+.brand i {
+    color: white;
+    text-shadow: 2px 2px 10px #317eac;
+    margin-right: 5px;
+    font-size: 20px;
+}
+.navbar-inner: {
+    background-color: #45aeea;
+}
+.sparkline {
+    height: 42px;
+    width: 100%;
+    margin-top: -12px;
+    display: block;
+}
+.sparkline svg {
+    /*
+    width: 50%;
+    min-width: 60px;
+    */
+    margin: 2%;
+}
+path {
+    stroke: #333;
+}
+#temp {}
+.sparkline path {
+    stroke-width: 1.2px;
+    fill: none;
+}
+#sparkline path {
+    stroke: #b5152b;
+}
+#windsparkline path  {
+    stroke: #b5152b;
+}
+.pressure, #pressuresparkline path  {
+    stroke: #5c8843;
+}
+#graphtabs .outhumidity path.line, .humidity path.line  {
+    stroke: #4d8fc8;
+}
+#graphtabs .wind path.line, .wind path.line, #winddir path.line  {
+    stroke: #b5152b;
+}
+
+#current_weather.row-fluid {
+    background: inherit;
+    margin-bottom: 10px;
+}
+.trans {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+#current_weather>div{
+    /*
+    background-image: -moz-linear-gradient(top, #ffffff, #f2f2f2);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#f2f2f2));
+    background-image: -webkit-linear-gradient(top, #ffffff, #f2f2f2);
+    background-image: -o-linear-gradient(top, #ffffff, #f2f2f2);
+    background-image: linear-gradient(to bottom, #ffffff, #f2f2f2);
+    background-repeat: repeat-x;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    */
+    border-radius: 5px;
+    text-align: center;
+}
+#current_weather .navbar .nav h5 {
+    float: left;
+}
+#current_weather i {
+    font-size: 24px;
+}
+#current_weather .navbar .left > li {
+    padding-left: 9px;
+    padding-right: 9px;
+    border-right: 1px solid white;
+    border-left: 1px solid #f2f2f2;
+}
+#current_weather .navbar .nav > li > span {
+    float: none;
+    padding: 10px 15px 10px;
+    margin: 10px 0;
+    color: #777777;
+    text-decoration: none;
+    text-shadow: 0 1px 0 #ffffff;
+}
+.yellow { color: #C98E0A; }
+.purple, .high { 
+    color: #8C52E2; 
+    stroke: #8c52e2;
+}
+.pink    { color: #C25090; }
+.purple2, .low, .min { 
+    color: #7B6BB9;
+    stroke: #7b6bb9;
+}
+.red, .avg, .temp, .wind { color: #b5152b; stroke: #b5152b; }
+.green, .pressure { 
+    color: #5c8843;
+    stroke: #5c8843;
+}
+h1, h2, h3, h4, h5, h6, .blue, .hum, .rain { color: #4d8fc8; }
+
+svg {
+    font-size: 13px;
+}
+svg text {
+    color: #ccc;
+}
+svg text.score {
+    fill: white;
+}
+.ruler {
+    fill: black;
+    stroke: none;
+    shape-rendering: crispEdges;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    /* Dont Hide y axis line */
+     stroke: #d4d4d4;
+    shape-rendering: crispEdges;
+}
+
+.x.axis path {
+    stroke: #d4d4d4;
+}
+
+.bar {
+    fill: steelblue;
+    /*
+     Stroke makes it ugly on low widths
+    stroke: white;
+    */
+}
+.bar:hover {
+    fill: #002147;
+}
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}
+svg:not(:hover) .focus {
+  display: none;
+}
+
+.focus line {
+  stroke: red;
+  shape-rendering: crispEdges;
+}
+
+.focus circle {
+  fill: #fff;
+  fill-opacity: .5;
+  stroke: red;
+  stroke-width: 1.5px;
+}
+
+#tt, #tooltip {
+    z-index: 1;
+    display: none;
+    overflow: none;
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);
+    background-repeat: repeat-x;
+    border: 1px solid #d4d4d4;
+    transition: opacity 500ms linear;
+    -moz-transition: opacity 500ms linear;
+    -webkit-transition: opacity 500ms linear;
+
+    transition-delay: 500ms
+    -moz-transition-delay: 500ms;
+    -webkit-transition-delay: 500ms;
+
+    -moz-box-shadow: 4px 4px 10px rgba(0,0,0,.5);
+    -webkit-box-shadow: 4px 4px 10px rgba(0,0,0,.5);
+    box-shadow: 4px 4px 10px rgba(0,0,0,.5);
+
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+
+}
+#tt .value {
+    font-weight: strong;
+}
+
+/**********
+*  Legend
+*/
+
+.legend .series {
+  cursor: pointer;
+}
+
+.legend circle {
+  stroke-width: 2px;
+}
+
+.legend .disabled circle {
+  fill-opacity: 0;
+}
+/**********
+*  Line chart
+*/
+
+.point-paths path {
+  /*
+  fill: #eee;
+  stroke: #aaa;
+  */
+  stroke-opacity: 0;
+  fill-opacity: 0;
+}
+
+
+.line path {
+  fill: none;
+  stroke-width: 2px;
+  stroke-linecap: round;
+
+  transition: stroke-width 250ms linear;
+  -moz-transition: stroke-width 250ms linear;
+  -webkit-transition: stroke-width 250ms linear;
+
+  transition-delay: 250ms
+  -moz-transition-delay: 250ms;
+  -webkit-transition-delay: 250ms;
+}
+
+.line.hover path {
+  stroke-width: 6px;
+  stroke: #002147;
+}
+
+.line .point {
+  transition: stroke-width 250ms linear;
+  -moz-transition: stroke-width 250ms linear;
+  -webkit-transition: stroke-width 250ms linear;
+}
+
+.line .point.hover {
+  stroke-width: 20px;
+  stroke-opacity: .5;
+}
+
+.line {
+    fill: none;
+    stroke-width: 2px;
+}
+line.yLine {
+    stroke: #dfdfdf;
+    shape-rendering: crispEdges;
+}
+/* Windrose styles */
+.windroserow svg {
+    margin: 0 auto;
+    width: 400px;
+    display: block;
+}
+svg text { font: 14px sans-serif; text-anchor: middle }
+svg .caption { font: 18px sans-serif; }
+svg .axes { stroke: #aaa; stroke-width: 0.5px; fill: none; }
+svg .labels text { letter-spacing: 1px; fill: #444; font-size: 12px; }
+svg .arcs {  stroke: #000; stroke-width: 0.5px; }
+svg .arctext text { font-size: 9px; }
+svg #windrose .arctext { fill: #44d; }
+svg #windspeed .arctext { fill: #933; }
+svg .calmwind text {  font-size: 18px; }
+svg text.calmcaption {  font-size: 12px; }
+svg g.tickmarks>text { font-size: 10px; fill: #888;}
+
+@media (max-width: 979px) {
+    body {
+        padding-top: 0;
+    }
+    /* Lesser stroke width for smaller screen */
+    .line {
+        stroke-width: 1.5px;
+    }
+}
+@media (min-width: 1200px) {
+    /* Bigger stroke width for bigger screen */
+    .line {
+        stroke-width: 3px;
+    }
+}
+
+/* Meteo icons */
+.icon-met {
+    font-family: 'MeteoconsRegular'
+}
+.icon-compass:before {
+    content: "(";
+}
+.icon-temp:before {
+    content: "'";
+}
+.icon-wind:before {
+    content: "F";
+}
+
