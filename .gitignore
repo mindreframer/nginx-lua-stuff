@@ -1,0 +1,4 @@
+.rvmrc
+tmp/*
+vendor/openresty*
+/luac.out
