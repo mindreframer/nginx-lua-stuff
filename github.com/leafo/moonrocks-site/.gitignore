@@ -1,0 +1,8 @@
+*.lua
+.tup
+logs/
+lapis
+nginx.conf.compiled
+build/
+moonrocks/
+static/storage
