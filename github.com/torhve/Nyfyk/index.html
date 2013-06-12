@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en" ng-app="Nyfyk" ng-csp>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title ng-bind-template="Nyfyk: {{ pageTitle}}"></title>
+  <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+  <link href="/static/fa/css/font-awesome.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="shortcut icon" href="/static/favicon.png">
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  <script src="/static/bootstrap/js/bootstrap.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.min.js"></script>
+  <script src="static/js/libs/moment-1.4.0.min.js"></script>
+  <script src="static/js/app.js"></script>
+  <script src="static/js/filters.js"></script>
+  <script src="static/js/services.js"></script>
+  <script src="static/js/directives.js"></script>
+
+</head>
+<body ng-controller="AppController" ng-cloak w-keydown w-space="handleSpace()"
+      w-down="items.next()" w-up="items.prev()" w-read="items.toggleRead()" w-star="items.toggleStarred()" >
+  <header>
+
+    <div class="navbar navbar-fixed-top no-select" ng-controller="NavBarController">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" data-toggle="modal" href="#modalAbout">
+              <i class="icon-rss"></i>
+            Nyfyk
+          </a>
+          <div class="nav-collapse collapse">
+              <ul class="nav">
+                  <!--
+                <li class="divider-vertical"></li>
+                <li class="itemCount dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    {{items.feeds.length}} Feeds
+                    <b class="caret"></b>
+                </a>
+                 <ul class="dropdown-menu">
+                  <li ng-repeat="feed in items.feeds">
+                   <a>
+                     {{feed}}
+                   </a>
+                  </li>
+                 </ul>
+                </li>
+                -->
+                <li class="divider-vertical"></li>
+                <li class="itemCount"><a ng-click="showAll()">{{items.all.length}} Items</a></li>
+                <li class="divider-vertical"></li>
+                <li class="itemCount"><a ng-click="showUnread()">{{items.all.length - items.readCount}} Unread</a></li>
+                <li class="divider-vertical"></li>
+                <li class="itemCount"><a ng-click="showStarred()">{{items.starredCount}} Starred</a></li>
+                <li class="divider-vertical"></li>
+                <li class="itemCount"><a ng-click="showRead()">{{items.readCount}} Read</a></li>
+                <li class="divider-vertical"></li>
+              </ul>
+              <form class="navbar-search pull-left" id="navSearch">
+                <input type="search" ng-model="$parent.search" class="search-query" placeholder="Search">
+              </form>
+              <ul class="nav pull-right" ng-controller="PersonaCtrl">
+                <!--<li><a ng-click="showSettings()"><i class="icon-cog icon-white"></i></a></li>-->
+                <!--
+                <li><a {{action "showUserConfig" on="click"}}><i class="icon-user icon-white"></i></a></li>
+                -->
+                <li ng-hide="verified"><a ng-click="verify()" title="Login" alt="Login">Sign in <i class="icon-angle-right icon-white"></i></a></li>
+                <li ng-show="verified"><a ng-click="logout()" title="You are logged in as {{ email }}" alt="You are logged in as {{ email }}">Log out <i class="icon-angle-right"></i></a></li>
+              </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </header>
+  <section class="mainContent">
+
+    <section class="controls no-select hidden-phone">
+      <div class="tControls">
+        <div class="top">
+          <button data-toggle="modal" class="btn" href="#modalFeed" title="Add subscription" alt="Add subscription"><i class="icon-plus-sign"></i></button>
+          <button ng-click="items.markAllRead()" class="btn" title="Mark all as read" alt="Mark all as read"><i class="icon-ok"></i></button>
+        </div>
+        <div class="middle">
+          <button ng-click="items.prev()" class="btn" ng-disabled="!items.hasPrev()"><i class="icon-arrow-up"></i></button>
+          <button ng-click="items.toggleStarred()" ng-disabled="!items.selected" class="btn">
+            <i ng-class="{'icon-star': items.selected.starred, 'icon-star-empty': !items.selected.starred}"></i>
+          </button>
+          <button ng-click="items.toggleRead()" ng-disabled="!items.selected" class="btn">
+            <i ng-class="{'icon-ok-sign': items.selected.read, 'icon-ok-circle': !items.selected.read}"></i>
+          </button>
+          <button ng-click="items.next()" class="btn" ng-disabled="!items.hasNext()"><i class="icon-arrow-down"></i></button>
+        </div>
+        <div class="bottom">
+          <button ng-click="refresh()" class="btn" title="Refresh feeds" alt="Refresh feeds">
+            <i class="icon-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="feeds scrollable">
+      <article ng-repeat="feed in items.feeds | filter: search | orderBy:['-unreadCount','feedtitle']"
+      ng-class="{read: feed.unreadCount == 0,active: feed.selected,'hidden-phone': feed.unreadCount == 0}" 
+               ng-click="items.selectFeed(feed.feedid)"
+               class="feed"
+               >
+        <div class="row-fluid" >
+            <div class="span11 pub-title" >
+                <a>
+                    {{feed.title}}
+                </a>
+          </div>
+          <div ng-class="{'hidden':feed.unreadCount==0}" class="span1">
+              <span 
+                  ng-class="{'badge-unread':feed.unreadCount>0}" class="badge">
+              {{ feed.unreadCount }}
+              </span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="summaries hidden-phone">
+      <article ng-repeat="item in items.filtered | filter: search"
+               id="{{item.id}}"
+               ng-class="{read: item.read, active: item.selected}" class="well summary"
+               ng-click="items.selectItem($index)">
+        <div class="row-fluid" >
+          <div class="span6 pub-name">
+            {{item.feedTitle}}
+          </div>
+          <div class="span6 pub-date">
+            {{item.date | formattedDate}}
+          </div>
+        </div>
+        <h3 class="pub-title">{{item.title}}</h3>
+      </article>
+    </section>
+
+    <section class="entries">
+
+      <article class="well entry active" ng-class="{read: items.selected.read}" ng-show="items.selected">
+        <div class="row-fluid">
+          <div class="span8">{{items.selected.date | formattedDate}}</div>
+            <div class="span4 actions">
+              <a ng-click="items.toggleStarred()">
+                <i ng-class="{'icon-star': items.selected.starred, 'icon-star-empty': !items.selected.starred}"></i>
+              </a>
+              <a ng-click="items.toggleRead()">
+                <i ng-class="{'icon-ok-sign': items.selected.read, 'icon-ok-circle': !items.selected.read}"></i>
+              </a>
+              <a href="{{items.selected.url}}" target="_blank"><i class="icon-share"></i></a>
+            </div>
+          </div>
+          <p class="muted pub-name">{{items.selected.feedTitle}}</p>
+          <h2>{{items.selected.title}}</h2>
+          <hr>
+          <!-- 
+          <w-content src="items.selected.content"></w-content>
+          -->
+          <p class="post-content" ng-bind-html-unsafe="items.selected.content"></p>
+          <hr>
+          <p class="muted author">{{items.selected.author}}</p> 
+
+        </div>
+      </article>
+      <div class="nothingSelected" ng-show="!items.filtered.length || !items.selected">
+        <h1><i class="icon-rss"></i></h1>
+        <p>Nothing selected.</p>
+      </div>
+
+    </section>
+  </section>
+
+  <div class="modal fade" id="modalAbout">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal">×</a>
+      <h3>About Nyfyk</h3>
+    </div>
+    <div class="modal-body">
+      <h3>Why Nyfyk?</h3>
+      <p>Why not?</p>
+      <h3>What's with the name?</h3>
+      <p>Nyfyk is a play on words in Norwegian where Ny means New and just like in english the start of the word for News. Fyk's literal meaning is "fly", also used about journalist slang "Bladfyk". This makes Nyfyk's meaning "Running after News", or "Running after New stuff", sort of.</p>
+      <h3>Attribution</h3>
+      <p>This code is a fork off WReader by <a href="http://petelepage.com">Pete LePage</a>.
+         AngularJS port by <a href="http://ericbidelman.com">Eric Bidelman</a>, Vojta Jina.
+         Chrome Platform port by <a href="http://igorminar.com">Igor Minar</a>.
+         Newsbeuter backend switch by <a href="http://hveem.no/">Tor Hveem</a>
+      <p/>
+      <h3>Source</h3>
+      <p>Visit <a href="http://github.com/torhve/Nyfyk">github.com/torhve/Nyfyk</a></p>
+    </div>
+    <div class="modal-footer">
+      <a data-dismiss="modal" class="btn btn-primary">Close</a>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalFeed">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal">×</a>
+      <h3>Add Feed</h3>
+      <label>URL</label>
+      <input ng-model="newfeedurl" type="text">
+      <label>Tag / Category</label>
+      <input ng-model="newfeedcategory" type="text">
+    </div>
+    <div class="modal-body">
+    </div>
+    <div class="modal-footer">
+      <a data-dismiss="modal" ng-click="addFeed()" class="btn btn-primary">Add feed</a>
+      <a data-dismiss="modal" class="btn">Close</a>
+    </div>
+  </div>
+
+  <script src="https://login.persona.org/include.js"></script>
+</body>
+</html>
