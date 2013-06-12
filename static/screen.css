@@ -1,0 +1,150 @@
+@import url(//fonts.googleapis.com/css?family=Open+Sans:300,400,400italic,600,600italic);
+body {
+  padding-bottom: 40px;
+  color: #222;
+  /*font-family: 'Open Sans', 'Georgia', sans-serif;*/
+  font: 15px/22px 'Open Sans',Arial,Helvetica,sans-serif;
+  background-color: #fdfdfd;
+/*  background-image: url(static/dust.png); */
+  overflow: hidden;
+}
+svg {
+  width: auto\9;
+  height: auto;
+  max-width: 100%;
+  vertical-align: middle;
+  border: 0;
+  -ms-interpolation-mode: bicubic;
+}
+.logo img, .logo svg {
+    max-height: 200px;
+    max-width: 100%;
+    vertical-align: middle;
+    text-align: left;
+}
+.logo svg path {
+    fill: #2779d3;
+}
+.date {
+    text-transform: uppercase;
+    font-size: smaller;
+    color: #999;
+}
+.bear-color, .bear {
+    color: #abad6a;
+}
+a, .blue {
+    color: #2779d3;
+}
+.gray {
+    color: #333;
+}
+.bear {
+    font-size: 96px;
+}
+#sidebar {
+    width: 264px;
+    border-left: 0;
+    border-top: 0;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+    box-shadow: 2px 2px 1px #eee ;
+    float: left;
+}
+.content {
+    margin-left: 264px;
+    min-width: 700px;
+    height: 2000px;
+    overflow-y: auto;
+    zoom: 1;
+}
+.content ul, .content .hero-unit, .content h1, .content h2 {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.content ul li {
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 1px #eee ;
+    margin-bottom: 15px;
+    padding: 15px;
+}
+.content p, .content blockquote, .content pre, .content h1 {
+    max-width: 968px;
+}
+#sidebar .about {
+  position: fixed;
+  bottom: 0px;
+  max-width: 18%;
+}
+h6.also {
+    text-transform: uppercase;
+}
+.also a {
+    font-size: smaller;
+}
+aside {
+    position: relative;
+    overflow-y: auto;
+    margin-bottom: 30px;
+    margin-left: 15px;
+    margin-right: 15px;
+    font-size: smaller;
+}
+aside ul {
+    margin-top: 30px;
+}
+aside li {
+    width: 100%;
+}
+aside li a {
+    color: #222;
+}
+aside.about a {
+    color: #222;
+    text-decoration: underline;
+}
+aside.info li a:hover {
+    color: #2779d3;
+    border: 2px solid #2779d3;
+    text-decoration: none;
+    font-weight: bold;
+}
+pre {
+    padding: 0;
+}
+.blog-post-list a {
+    text-transform: capitalize;
+}
+blockquote {
+    border-left: 10px solid #2779d3;
+}
+@media (max-width: 968px) {
+    #sidebar, .content {
+        position: relative;
+        min-height: 0;
+        margin-left: 0;
+        max-width: 100%;
+        border: 0;
+    }
+    #sidebar {
+        width: 100%;
+        text-align: center;
+    }
+    .content {
+        border-top: 1px solid #eee;
+    }
+    aside.about {
+        display: none;
+    }
+    aside.info ul {
+        width: 100%;
+        margin: auto;
+    }
+    aside.info li {
+        float: none;
+        display: inline-block;
+        clear: none;
+        width: auto;
+        margin: 0;
+    }
+}
