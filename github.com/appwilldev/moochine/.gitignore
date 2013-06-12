@@ -1,0 +1,11 @@
+
+#personal stuff
+p-*
+
+#demo logs
+wiki/
+demo/logs
+demo/p-*
+
+#temp files
+temp

@@ -1,0 +1,54 @@
+#!/usr/bin/env lua
+-- -*- lua -*-
+-- Copyright 2012 Appwill Inc.
+-- Author : KDr2
+--
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+--
+
+
+
+HELP_INFO  = [==[
+Usage:
+      moochine new <APP_NAME> <APP_PATH> : create a new moochine app
+      moochine help                      : show this help
+]==]
+
+NGINX_CONF = [==[
+        location / {
+            #...
+            default_type text/html;
+            set $MOOCHINE_HOME '__MOOCHINE_HOME__';
+            set $MOOCHINE_APP_NAME  '__MOOCHINE_APP_NAME__'; 
+            set $MOOCHINE_APP_PATH  '__MOOCHINE_APP_PATH__';
+            access_by_lua_file '$MOOCHINE_HOME/luasrc/mch_access.lua';
+            content_by_lua_file '$MOOCHINE_HOME/luasrc/mch_content.lua';
+            #...
+        }
+]==]
+
+AVAILABLE_CMD={"new","help"}
+
+function __FILE__() return debug.getinfo(2,'S').source end
+
+function show_help_and_exit()
+    print(HELP_INFO)
+    os.exit()
+end
+
+function new_app(name,path)
+end
+
+print(HELP_INFO)
