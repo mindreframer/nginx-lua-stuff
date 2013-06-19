@@ -76,7 +76,7 @@ Examples for OpenResty:
 
     agentzh/headers-more-nginx-module:
       Set, add, and clear arbitrary output headers
-       160 commits, 137 stars, 16 forks
+       160 commits, 141 stars, 16 forks
 
     agentzh/lua-resty-memcached:
       Lua memcached client driver for the ngx_lua based on the cosocket API
@@ -84,11 +84,11 @@ Examples for OpenResty:
 
     agentzh/lua-resty-mysql:
       Nonblocking Lua MySQL driver library for ngx_lua
-       88 commits, 39 stars, 17 forks
+       88 commits, 41 stars, 17 forks
 
     agentzh/lua-resty-redis:
       Lua redis client driver for the ngx_lua based on the cosocket API
-       97 commits, 93 stars, 19 forks
+       97 commits, 93 stars, 20 forks
 
     agentzh/lua-resty-string:
       String utilities and common hash functions for ngx_lua and LuaJIT
@@ -104,11 +104,11 @@ Examples for OpenResty:
 
     agentzh/nginx-systemtap-toolkit:
       Real-time analyzing and diagnosing tools for Nginx based on SystemTap
-       147 commits, 80 stars, 26 forks
+       147 commits, 81 stars, 26 forks
 
     agentzh/ngx_openresty:
       Turning Nginx into a Full-fledged Web App Server
-       633 commits, 365 stars, 43 forks
+       633 commits, 366 stars, 43 forks
 
     agentzh/rds-csv-nginx-module:
       Nginx output filter module to convert Resty-DBD-Streams (RDS) to Comma-Separated Values (CSV)
@@ -160,7 +160,7 @@ Examples for OpenResty:
 
     chaoslawful/lua-nginx-module:
       Embed the Power of Lua into NginX
-       1000+ commits, 672 stars, 129 forks
+       1000+ commits, 673 stars, 131 forks
 
     cloudaice/redis-restful:
       a restful API for redis and base on openresty
@@ -184,15 +184,15 @@ Examples for OpenResty:
 
     observing/balancerbattle:
       WebSocket loadbalancer battle
-       53 commits, 226 stars, 14 forks
+       53 commits, 227 stars, 14 forks
 
     pgaertig/nginx-big-upload:
       Resumable and reliable file uploads of any size. Nginx extension written in Lua.
-       22 commits, 17 stars, 3 forks
+       22 commits, 18 stars, 3 forks
 
     pintsized/ledge:
       A Lua module for OpenResty, providing scriptable HTTP cache (edge) functionality for Nginx.
-       453 commits, 46 stars, 7 forks
+       453 commits, 47 stars, 7 forks
 
     samalba/hipache-nginx:
       Dynamic HTTP routing with Nginx and Redis (reimplements Hipache with Nginx using the Lua module)
