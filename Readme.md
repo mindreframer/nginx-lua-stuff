@@ -76,7 +76,7 @@ Examples for OpenResty:
 
     agentzh/headers-more-nginx-module:
       Set, add, and clear arbitrary output headers
-       160 commits, 141 stars, 16 forks
+       160 commits, 146 stars, 16 forks
 
     agentzh/lua-resty-memcached:
       Lua memcached client driver for the ngx_lua based on the cosocket API
@@ -88,27 +88,27 @@ Examples for OpenResty:
 
     agentzh/lua-resty-redis:
       Lua redis client driver for the ngx_lua based on the cosocket API
-       97 commits, 93 stars, 20 forks
+       97 commits, 94 stars, 20 forks
 
     agentzh/lua-resty-string:
       String utilities and common hash functions for ngx_lua and LuaJIT
-       39 commits, 18 stars, 10 forks
+       39 commits, 19 stars, 10 forks
 
     agentzh/lua-resty-upload:
       Streaming reader and parser for http file uploading based on ngx_lua cosocket
-       45 commits, 32 stars, 6 forks
+       45 commits, 34 stars, 6 forks
 
     agentzh/memc-nginx-module:
       An extended version of the standard memcached module that supports set, add, delete, and many more memcached commands.
-       199 commits, 89 stars, 20 forks
+       199 commits, 90 stars, 20 forks
 
     agentzh/nginx-systemtap-toolkit:
       Real-time analyzing and diagnosing tools for Nginx based on SystemTap
-       147 commits, 81 stars, 26 forks
+       150 commits, 80 stars, 26 forks
 
     agentzh/ngx_openresty:
       Turning Nginx into a Full-fledged Web App Server
-       633 commits, 366 stars, 43 forks
+       634 commits, 365 stars, 44 forks
 
     agentzh/rds-csv-nginx-module:
       Nginx output filter module to convert Resty-DBD-Streams (RDS) to Comma-Separated Values (CSV)
@@ -120,7 +120,7 @@ Examples for OpenResty:
 
     agentzh/redis2-nginx-module:
       Nginx upstream module for the Redis 2.0 protocol
-       129 commits, 239 stars, 28 forks
+       129 commits, 240 stars, 28 forks
 
     agentzh/replace-filter-nginx-module:
       Streaming regular expression replacement in response bodies
@@ -144,7 +144,7 @@ Examples for OpenResty:
 
     bakins/lua-resty-riak:
       Lua riak protocol buffer client driver for the ngx_lua based on the cosocket API
-       167 commits, 6 stars, 1 forks
+       199 commits, 6 stars, 1 forks
 
     benagricola/openresty-squiz-util:
       A Squiz Lua module for OpenResty to provide an error-tolerant set of tools allowing for the succinct implementation of logic directly in the webserver configuration file.
@@ -160,7 +160,7 @@ Examples for OpenResty:
 
     chaoslawful/lua-nginx-module:
       Embed the Power of Lua into NginX
-       1000+ commits, 673 stars, 131 forks
+       1000+ commits, 680 stars, 134 forks
 
     cloudaice/redis-restful:
       a restful API for redis and base on openresty
@@ -172,7 +172,7 @@ Examples for OpenResty:
 
     desbouis/nginx-redis-proxy:
       Nginx as reverse proxy using redis as cache engine
-       44 commits, 21 stars, 2 forks
+       44 commits, 22 stars, 2 forks
 
     leafo/moonrocks-site:
       a website for submitting and hosting lua rocks
@@ -184,7 +184,7 @@ Examples for OpenResty:
 
     observing/balancerbattle:
       WebSocket loadbalancer battle
-       53 commits, 227 stars, 14 forks
+       53 commits, 230 stars, 14 forks
 
     pgaertig/nginx-big-upload:
       Resumable and reliable file uploads of any size. Nginx extension written in Lua.
@@ -196,11 +196,11 @@ Examples for OpenResty:
 
     samalba/hipache-nginx:
       Dynamic HTTP routing with Nginx and Redis (reimplements Hipache with Nginx using the Lua module)
-       7 commits, 49 stars, 7 forks
+       7 commits, 50 stars, 7 forks
 
     solso/api-aggregator:
       Aggregate REST API calls easily on a sandboxed Nginx+Lua env
-       14 commits, 26 stars, 0 forks
+       14 commits, 27 stars, 0 forks
 
     thattommyhall/nginx-lua-examples:
 
@@ -212,7 +212,7 @@ Examples for OpenResty:
 
     torhve/LuaWeb:
       A very simple blog enging using opreresty, nginx, lua, markdown, git and redis
-       37 commits, 20 stars, 2 forks
+       37 commits, 20 stars, 4 forks
 
     torhve/Nyfyk:
       HTML5 RSS  Reader app. SQLite3+newsbeuter+openresty-backend
