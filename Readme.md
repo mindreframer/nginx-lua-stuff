@@ -174,6 +174,10 @@ Examples for OpenResty:
       Nginx as reverse proxy using redis as cache engine
        44 commits, last change: 2012-03-21 16:49:42, 22 stars, 2 forks
 
+    garethr/nginx-json-proxy:
+      An experiment with openresty, lua and nginx
+       2 commits, last change: 2013-07-02 12:26:41, 0 stars, 1 forks
+
     leafo/moonrocks-site:
       a website for submitting and hosting lua rocks
        112 commits, last change: 2013-06-16 22:18:17, 12 stars, 1 forks
