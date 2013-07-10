@@ -206,6 +206,10 @@ Examples for OpenResty:
 
        7 commits, last change: 2013-03-19 12:09:06, 2 stars, 2 forks
 
+    thattommyhall/nginx-lua-examples:
+
+       7 commits, last change: 2013-03-19 12:09:06, 2 stars, 2 forks
+
     torhve/Amatyr:
       Amateur weather graphs using d3 js, watch js, rivets js, lua, postgresql, nginx
        157 commits, last change: 2013-06-04 06:15:43, 18 stars, 4 forks
