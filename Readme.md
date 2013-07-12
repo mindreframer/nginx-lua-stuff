@@ -182,6 +182,10 @@ Examples for OpenResty:
       An experiment with openresty, lua and nginx
        2 commits, last change: 2013-07-02 12:26:41, 0 stars, 1 forks
 
+    jtarchie/sinatra-openresty:
+      Sinatra ported to OpenResty framework.
+       12 commits, last change: 2013-06-30 13:31:54, 0 stars, 0 forks
+
     leafo/moonrocks-site:
       a website for submitting and hosting lua rocks
        112 commits, last change: 2013-06-16 22:18:17, 12 stars, 1 forks
@@ -233,4 +237,8 @@ Examples for OpenResty:
     wstucco/ssga.lua:
       Server Side Google Analytics in LUA
        7 commits, last change: 2013-01-28 08:55:07, 1 stars, 0 forks
+
+    xinqiyang/yagamiko:
+      yagamiko is a api server project implementation by lua  nginx ( openresty) .
+       7 commits, last change: 2013-06-17 06:38:44, 0 stars, 0 forks
 <!-- PROJECTS_LIST_END -->
