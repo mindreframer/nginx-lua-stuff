@@ -210,6 +210,10 @@ Examples for OpenResty:
       Dynamic HTTP routing with Nginx and Redis (reimplements Hipache with Nginx using the Lua module)
        7 commits, last change: 2013-03-21 18:38:22, 52 stars, 7 forks
 
+    seandong/ad-analytics:
+      A simple and lightweight web data collection framework based on OpenResty(ngx_lua, http://openresty.org).
+       4 commits, last change: 2013-06-05 02:03:34, 0 stars, 0 forks
+
     solso/api-aggregator:
       Aggregate REST API calls easily on a sandboxed Nginx+Lua env
        14 commits, last change: 2013-04-17 01:39:02, 29 stars, 0 forks
