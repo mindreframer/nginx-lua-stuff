@@ -146,6 +146,10 @@ Examples for OpenResty:
       Lua riak protocol buffer client driver for the ngx_lua based on the cosocket API
        199 commits, last change: 2013-06-20 07:33:11, 7 stars, 1 forks
 
+    bakins/stardust:
+      Simple OpenResty web framework
+       86 commits, last change: 2013-07-09 05:18:08, 0 stars, 0 forks
+
     benagricola/openresty-squiz-util:
       A Squiz Lua module for OpenResty to provide an error-tolerant set of tools allowing for the succinct implementation of logic directly in the webserver configuration file.
        9 commits, last change: 2013-02-07 06:28:31, 0 stars, 0 forks
