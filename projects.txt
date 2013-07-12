@@ -43,3 +43,4 @@ https://github.com/torhve/LuaWeb.git
 https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/jtarchie/sinatra-openresty.git
+https://github.com/xinqiyang/yagamiko.git
