@@ -1,0 +1,39 @@
+server {
+        ### server port and name ###
+        listen          443 ssl;
+        server_name     speech.bit-ware.co.jp;
+ 
+        ### SSL log files ###
+        access_log      logs/ssl-access.log;
+        error_log       logs/ssl-error.log;
+ 
+        ### SSL cert files ###
+        ssl_certificate      ssl/bit-ware.co.jp.csr;
+        ssl_certificate_key  ssl/bit-ware.co.jp.key;
+        ### Add SSL specific settings here ###
+        keepalive_timeout    60;
+ 
+        ###  Limiting Ciphers ########################
+        # Uncomment as per your setup
+        #ssl_ciphers HIGH:!ADH;
+        #ssl_perfer_server_ciphers on;
+        #ssl_protocols SSLv3;
+        ##############################################
+        ### We want full access to SSL via backend ###
+        location / {
+                proxy_pass  http://speech.bit-ware.co.jp;
+                ### force timeouts if one of backend is died ##
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+ 
+                ### Set headers ####
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+ 
+                ### Most PHP, Python, Rails, Java App can use this header ###
+                proxy_set_header X-Forwarded-Proto https;
+ 
+                ### By default we don't want to redirect it ####
+                proxy_redirect     off;
+      }
+}

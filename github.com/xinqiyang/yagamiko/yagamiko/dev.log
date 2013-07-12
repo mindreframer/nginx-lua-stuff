@@ -1,0 +1,22 @@
+dev log by xinqiyang
+
+20130619  close lua code cache, when in dev mode.
+add  resty.http
+add  tidy configuration 
+add  waf libray 
+add  uuid library ( c module )
+add  ipquery libray (c module)  add qqwry.dat
+add  restyfull request set 
+add  redis sharding setting
+add  weedfs  image/audio storage
+	 weedfs，http://code.google.com/p/weed-fs/
+
+
+
+
+
+
+question
+
+	logger:i  write a log when add data
+	

@@ -1,0 +1,1 @@
+YAGAMI APP SETUP ERROR: /source/freeflare/server/yagami/luasrc/yagami/logger.lua:43: attempt to index local 'f' (a nil value)
