@@ -194,6 +194,10 @@ Examples for OpenResty:
       weefs,lua,nginx and file post processing with ffmpeg and graphicsmagick
        7 commits, last change: 2013-04-11 02:17:27, 5 stars, 2 forks
 
+    mindreframer/github-auth-nginx:
+      a clone from https://gist.github.com/6005442 (lusis)
+       2 commits, last change: 2013-07-15 20:06:19, 0 stars, 0 forks
+
     observing/balancerbattle:
       WebSocket loadbalancer battle
        53 commits, last change: 2013-05-24 01:27:01, 232 stars, 14 forks
