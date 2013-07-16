@@ -1,0 +1,10 @@
+*.gem
+.bundle
+vendor/bundle
+pkg/*
+.vagrant
+.vagrant.*
+bin/*
+files/**/cache/
+vendor/cookbooks
+*.lock

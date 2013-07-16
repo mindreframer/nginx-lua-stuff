@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# Perform necessary openresty setup steps
+# after package is installed.
+#
+
+PROGNAME=$(basename $0)
+
+function error_exit
+{
+  echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
+  exit 1
+}
+
+rm /usr/sbin/nginx
+ln -sf /opt/nginx/sbin/nginx /usr/sbin/nginx || error_exit "Cannot link /usr/sbin/nginx to /opt/nginx/sbin/nginx "
+
+echo "Thank you for installing nginx!"
+
+exit 0
