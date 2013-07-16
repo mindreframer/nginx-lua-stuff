@@ -146,6 +146,10 @@ Examples for OpenResty:
       Lua riak protocol buffer client driver for the ngx_lua based on the cosocket API
        199 commits, last change: 2013-06-20 07:33:11, 7 stars, 1 forks
 
+    bakins/omnibus-nginx:
+      Omnibus packaging for Openresty/nginx
+       24 commits, last change: 2013-06-08 05:08:24, 3 stars, 0 forks
+
     bakins/stardust:
       Simple OpenResty web framework
        86 commits, last change: 2013-07-09 05:18:08, 0 stars, 0 forks
