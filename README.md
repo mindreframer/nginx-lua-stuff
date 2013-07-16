@@ -59,7 +59,12 @@ Depends on the following Lua modules:
 
 ## Usage ##
 
-See the [generated docs](http://bakins.github.io/lua-resty-riak/)  for usage and examples.
+See the [generated docs](http://bakins.github.io/lua-resty-riak/)  for
+usage and examples.
+
+**Note** The high level API should be considered _stable_ - ie will
+  not break between minor versions. The _low-level_ or _raw_ API
+  should not be considered stable. 
 
 ## Limitations ##
 

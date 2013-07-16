@@ -33,7 +33,7 @@ __DATA__
             if not ok then
                 ngx.log(ngx.ERR, "connect failed: " .. err)
             end
-	    local object = { key = "1", value = "test", content_type = "text/plain" } 
+	    local object = { key = "1", content = { value = "test", content_type = "text/plain" }} 
 	    local rc, err = client:store_object("test", object)
             ngx.say(rc)
             local object, err = client:get_object("test", "1")

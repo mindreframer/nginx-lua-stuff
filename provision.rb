@@ -26,6 +26,12 @@ file "/etc/default/riak" do
   notifies :restart, "service[riak]"
 end
 
+template "/etc/riak/app.config" do
+  source "/vagrant/app.config"
+  local true
+  notifies :restart, "service[riak]"
+end
+
 service "riak" do
   action [ :enable, :start]
 end
@@ -42,11 +48,14 @@ execute "cpanm install Test::Nginx" do
   not_if "perl -mTest::Nginx -e'1'"
 end
 
-openresty_version = "1.2.7.6"
+openresty_version = "1.2.8.6"
+
+check_nginx_version = "/usr/local/sbin/nginx -v 2>&1 | grep 'ngx_openresty/#{openresty_version}'"
 
 remote_file "/home/vagrant/ngx_openresty-#{openresty_version}.tar.gz" do
   source "http://openresty.org/download/ngx_openresty-#{openresty_version}.tar.gz"
   notifies :run, "execute[install openresty]"
+  not_if check_nginx_version
 end
 
 execute "install openresty" do
@@ -58,5 +67,5 @@ cd ngx_openresty-#{openresty_version}
 make
 make install
 EOF
-  action :nothing
+  not_if check_nginx_version
 end

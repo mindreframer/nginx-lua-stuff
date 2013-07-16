@@ -49,3 +49,31 @@ number
 number
 --- no_error_log
 [error]
+
+=== TEST 2: get bucket props using high level interface
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            local riak = require "resty.riak"
+            local client = riak.new()
+            local ok, err = client:connect("127.0.0.1", 8087)
+            if not ok then
+                ngx.log(ngx.ERR, "connect failed: " .. err)
+            end
+            local bucket = client:bucket("test")
+	    local props, err = bucket:properties("test")
+	    ngx.say(type(props))
+	    ngx.say(type(props.n_val))
+	    ngx.say(type(props.allow_mult))
+            client:close()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+table
+number
+number
+--- no_error_log
+[error]

@@ -7,7 +7,7 @@ local error = error
 
 local _M = require("resty.riak.helpers").module()
 
-_M._VERSION = '0.2.1'
+_M._VERSION = '1.0.0'
 
 local riak_bucket = require "resty.riak.bucket"
 local riak_bucket_new = riak_bucket.new
