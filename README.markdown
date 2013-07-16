@@ -129,7 +129,13 @@ Here is an example for removing all the C/C++ comments from a C/C++ source code 
     replace_filter '/\*.*?\*/|//[^\n]*' '' g;
 
 When the `Content-Encoding` response header is not empty (like `gzip`), the response
-body will always remain intact.
+body will always remain intact. So usually you want to disable the gzip compression
+in your backend servers' responses by adding the following line to your `nginx.conf`
+if you are the ngx_proxy module:
+
+    proxy_set_header Accept-Encoding '';
+
+Your responses can still be gzip compressed on the Nginx server level though.
 
 replace_filter_types
 --------------------
@@ -181,6 +187,13 @@ the `SREGEX_INC` and `SREGEX_LIB` environments before running the
     export SREGEX_LIB=/opt/sregex/lib
 
 assuming that your sregex is installed to the prefix `/opt/sregex`.
+
+Trouble Shooting
+================
+
+* If you are seeing the error "error while loading shared libraries: libsregex.so.0: cannot open shared object file: No such file or directory"
+while starting nginx, then it means that the installation path of your libsregex library
+is not in your system's default library search path. You can solve this issue by passing the option `--with-ld-opt='-Wl,-rpath,/usr/local/lib'` to nginx's `./configure` command. Alternatively, you can just add the path of your libsregex.so.0 to the `LD_LIBRARY_PATH` environment value before starting your nginx server.
 
 TODO
 ====
