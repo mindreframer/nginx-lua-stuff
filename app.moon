@@ -20,7 +20,7 @@ import Users, UserData, Modules, Versions, Rocks, Manifests, ManifestModules, Ap
 import concat, insert from table
 
 parse_rockspec = (text) ->
-  fn = loadstring text, rock
+  fn = loadstring text
   return nil, "Failed to parse rockspec" unless fn
   spec = {}
   setfenv fn, spec
@@ -100,14 +100,21 @@ require_login = (fn) ->
 
 load_module = =>
   @user = assert Users\find(slug: @params.user), "Invalid user"
-  @module = assert Modules\find(user_id: @user.id, name: @params.module), "Invalid module"
+  @module = assert Modules\find(user_id: @user.id, name: @params.module\lower!), "Invalid module"
   @module.user = @user
 
   if @params.version
     @version = assert Versions\find({
       module_id: @module.id
-      version_name: @params.version
+      version_name: @params.version\lower!
     }), "Invalid version"
+
+  if @route_name and (@module.name != @params.module or @version and @version.version_name != @params.version)
+    url = @url_for @route_name, user: @user, module: @module, version: @version
+    @write status: 301, redirect_to: url
+    return false
+
+  true
 
 load_manifest = (key="id") =>
   @manifest = assert Manifests\find([key]: @params.manifest), "Invalid manifest id"
@@ -163,6 +170,76 @@ delete_module = respond_to {
       @module\delete!
       redirect_to: @url_for "index"
 }
+
+handle_rockspec_upload = =>
+  assert_error @current_user, "Must be logged in"
+
+  assert_valid @params, {
+    { "rockspec_file", file_exists: true }
+  }
+
+  file = @params.rockspec_file
+  spec = assert_error parse_rockspec file.content
+
+  new_module = false
+  mod = Modules\find user_id: @current_user.id, name: spec.package\lower!
+
+  unless mod
+    new_module = true
+    mod = assert Modules\create spec, @current_user
+
+  key = "#{@current_user.id}/#{filename_for_rockspec spec}"
+  out = bucket\put_file_string file.content, {
+    :key, mimetype: "text/x-rockspec"
+  }
+
+  unless out == 200
+    mod\delete! if new_module
+    error "Failed to upload rockspec"
+
+  version = Versions\find module_id: mod.id, version_name: spec.version\lower!
+
+  if version
+    -- make sure file pointer is correct
+    unless version.rockspec_key == key
+      version\update rockspec_key: key
+  else
+    version = assert Versions\create mod, spec, key
+    mod\update current_version_id: version.id
+
+  -- try to insert into root
+  if new_module
+    root_manifest = Manifests\root!
+    unless ManifestModules\find manifest_id: root_manifest.id, module_id: mod.id
+      ManifestModules\create root_manifest, mod
+
+  mod, version, new_module
+
+
+handle_rock_upload = =>
+  assert_editable @, @module
+
+  assert_valid @params, {
+    { "rock_file", file_exists: true }
+  }
+
+  file = @params.rock_file
+
+  rock_info = assert_error parse_rock_fname @module.name, file.filename
+
+  if rock_info.version != @version.version_name
+    yield_error "Rock doesn't match version #{@version.version_name}"
+
+  key = "#{@current_user.id}/#{file.filename}"
+  out = bucket\put_file_string file.content, {
+    :key, mimetype: "application/x-rock"
+  }
+
+  unless out == 200
+    error "Failed to upload rock"
+
+  Rocks\create @version, rock_info.arch, key
+
 
 set_memory_usage = ->
   posix = require "posix"
@@ -221,41 +298,7 @@ class extends lapis.Application
 
     POST: capture_errors =>
       assert_csrf @
-      assert @current_user, "Must be logged in"
-
-      assert_valid @params, {
-        { "rockspec_file", file_exists: true }
-      }
-
-      file = @params.rockspec_file
-      spec = assert_error parse_rockspec file.content
-
-      new_module = false
-      mod = Modules\find user_id: @current_user.id, name: spec.package\lower!
-
-      unless mod
-        new_module = true
-        mod = assert Modules\create spec, @current_user
-
-      key = "#{@current_user.id}/#{filename_for_rockspec spec}"
-      out = bucket\put_file_string file.content, {
-        :key, mimetype: "text/x-rockspec"
-      }
-
-      unless out == 200
-        mod\delete! if new_module
-        error "Failed to upload rockspec"
-
-      version = Versions\find module_id: mod.id, version_name: spec.version\lower!
-
-      if version
-        -- make sure file pointer is correct
-        unless version.rockspec_key == key
-          version\update rockspec_key: key
-      else
-        version = assert Versions\create mod, spec, key
-        mod\update current_version_id: version.id
-
+      mod, version = handle_rockspec_upload @
       redirect_to: @url_for "module", user: @current_user, module: mod
   }
 
@@ -289,7 +332,8 @@ class extends lapis.Application
     render: true
 
   [module: "/modules/:user/:module"]: =>
-    load_module @
+    return unless load_module @
+
     @title = "#{@module\name_for_display!}"
     @page_description = @module.summary if @module.summary
 
@@ -324,7 +368,8 @@ class extends lapis.Application
   }
 
   [module_version: "/modules/:user/:module/:version"]: =>
-    load_module @
+    return unless load_module @
+
     @title = "#{@module\name_for_display!} #{@version.version_name}"
     @rocks = Rocks\select "where version_id = ? order by arch asc", @version.id
 
@@ -344,28 +389,7 @@ class extends lapis.Application
 
     POST: capture_errors =>
       assert_csrf @
-      assert_editable @, @module
-
-      assert_valid @params, {
-        { "rock_file", file_exists: true }
-      }
-
-      file = @params.rock_file
-
-      rock_info = assert_error parse_rock_fname @module.name, file.filename
-
-      if rock_info.version != @version.version_name
-        yield_error "Rock doesn't match version #{@version.version_name}"
-
-      key = "#{@current_user.id}/#{file.filename}"
-      out = bucket\put_file_string file.content, {
-        :key, mimetype: "application/x-rock"
-      }
-
-      unless out == 200
-        error "Failed to upload rock"
-
-      Rocks\create @version, rock_info.arch, key
+      handle_rock_upload @
       redirect_to: @url_for "module_version", @
   }
 
@@ -585,9 +609,44 @@ class extends lapis.Application
     }
   }
 
+  "/api/tool_version": =>
+    config = require"lapis.config".get!
+    json: { version: config.tool_version }
+
   -- Get status of key
   "/api/1/:key/status": api_request =>
     json: { user_id: @current_user.id, created_at: @key.created_at }
+
+  "/api/1/:key/modules": api_request =>
+    json: { modules: @current_user\all_modules! }
+
+  "/api/1/:key/check_rockspec": api_request =>
+    assert_valid @params, {
+      { "package", exists: true }
+      { "version", exists: true }
+    }
+
+    module = Modules\find user_id: @current_user.id, name: @params.package\lower!
+    version = if module
+      Versions\find module_id: module.id, version_name: @params.version\lower!
+
+    json: { :module, :version }
+
+  "/api/1/:key/upload": api_request =>
+    module, version, is_new = handle_rockspec_upload @
+
+    manifest_modules = ManifestModules\select "where module_id = ?", module.id
+    Manifests\include_in manifest_modules, "manifest_id"
+
+    manifests = [m.manifest for m in *manifest_modules]
+    module_url = @build_url @url_for "module", user: @current_user, :module
+    json: { :module, :version, :module_url, :manifests, :is_new }
+
+  "/api/1/:key/upload_rock/:version_id": api_request =>
+    @version = assert_error Versions\find(id: @params.version_id), "invalid version"
+    @module = Modules\find id: @version.module_id
+    rock = handle_rock_upload @
+    json: { :rock }
 
   [about: "/about"]: =>
     @title = "About"
