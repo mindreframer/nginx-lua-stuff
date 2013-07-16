@@ -32,6 +32,7 @@ https://github.com/garethr/nginx-json-proxy.git
 https://github.com/jtarchie/sinatra-openresty.git
 https://github.com/leafo/moonrocks-site.git
 https://github.com/medcl/lua-resty-weedfs.git
+https://github.com/mindreframer/github-auth-nginx.git
 https://github.com/observing/balancerbattle.git
 https://github.com/pgaertig/nginx-big-upload.git
 https://github.com/pintsized/ledge.git
@@ -45,4 +46,3 @@ https://github.com/torhve/LuaWeb.git
 https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
-https://github.com/mindreframer/github-auth-nginx.git
