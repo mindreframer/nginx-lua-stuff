@@ -1,5 +1,5 @@
 package = "lua-resty-riak"
-version = "0.2.1-1"
+version = "1.0.0-1"
 source = {
     url = "git://github.com/bakins/lua-resty-riak.git"
 }

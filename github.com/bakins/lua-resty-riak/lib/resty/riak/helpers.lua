@@ -1,6 +1,10 @@
 --- Internal helpers for resty
 -- @module resty.riak.helpers
 
+local pairs = pairs
+local ipairs = ipairs
+local insert = table.insert
+
 local _M = {}
 
 -- based on strict.lua and agentzh's lua-resty-*
@@ -30,5 +34,31 @@ function _M.module()
     setfenv(2, _M)
     return setmetatable(_M, class_mt)
 end
+
+
+-- helper functions
+function _M.table_to_RpbPairs(t)
+    local rc
+    if t then
+	rc = {}
+	for k,v in pairs(t) do
+	    insert(rc, { key = k, value = v})
+	end
+	return rc
+    else
+	return nil
+    end
+end
+
+function _M.RpbPairs_to_table(p)
+    local t = {}
+    if p then
+        for _,m in ipairs(p) do
+            t[m.key] = m.value
+        end
+    end
+    return t
+end
+
 
 return _M
