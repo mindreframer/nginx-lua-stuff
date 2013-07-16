@@ -1,0 +1,24 @@
+diff -ru ngx_openresty-1.2.8.6/bundle/nginx-1.2.8/src/core/nginx.h ngx_openresty-1.2.8.6.patch/bundle/nginx-1.2.8/src/core/nginx.h
+--- ngx_openresty-1.2.8.6/bundle/nginx-1.2.8/src/core/nginx.h	2013-05-13 19:18:01.000000000 +0000
++++ ngx_openresty-1.2.8.6.patch/bundle/nginx-1.2.8/src/core/nginx.h	2013-05-23 00:29:06.041196062 +0000
+@@ -11,7 +11,7 @@
+
+ #define nginx_version      1002008
+ #define NGINX_VERSION      "1.2.8"
+-#define NGINX_VER          "ngx_openresty/" NGINX_VERSION ".6"
++#define NGINX_VER          "nginx/" NGINX_VERSION
+
+ #define NGINX_VAR          "NGINX"
+ #define NGX_OLDPID_EXT     ".oldbin"
+diff -ru ngx_openresty-1.2.8.6/bundle/nginx-1.2.8/src/http/ngx_http_header_filter_module.c ngx_openresty-1.2.8.6.patch/bundle/nginx-1.2.8/src/http/ngx_http_header_filter_module.c
+--- ngx_openresty-1.2.8.6/bundle/nginx-1.2.8/src/http/ngx_http_header_filter_module.c	2013-05-13 19:18:01.000000000 +0000
++++ ngx_openresty-1.2.8.6.patch/bundle/nginx-1.2.8/src/http/ngx_http_header_filter_module.c	2013-05-23 00:29:38.077206614 +0000
+@@ -46,7 +46,7 @@
+ };
+
+
+-static char ngx_http_server_string[] = "Server: ngx_openresty" CRLF;
++static char ngx_http_server_string[] = "Server: nginx" CRLF;
+ static char ngx_http_server_full_string[] = "Server: " NGINX_VER CRLF;
+
+
