@@ -21,7 +21,7 @@ module(...)
 local function init_file(self, ctx)
   local file_path = ctx.file_path
   local file
-  if (ctx.range_from > 0) then
+  if not ctx.first_chunk then
     -- file must exist for follow up chunks
     file = io.open(file_path, 'r+')  -- Open file for update (reading and writing).
     if not file then
@@ -59,6 +59,10 @@ end
 local function on_body_start(self, ctx)
   ctx.file_path = concat({self.dir, ctx.id}, "/")
   return self:init_file(ctx)
+end
+
+local function on_abort(self)
+  self:close_file()
 end
 
 -- writes body data
