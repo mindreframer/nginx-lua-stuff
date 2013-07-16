@@ -20,6 +20,7 @@ https://github.com/agentzh/test-nginx.git
 https://github.com/appwilldev/moochine-demo.git
 https://github.com/appwilldev/moochine.git
 https://github.com/bakins/lua-resty-riak.git
+https://github.com/bakins/omnibus-nginx.git
 https://github.com/bakins/stardust.git
 https://github.com/benagricola/openresty-squiz-util.git
 https://github.com/bsm/fakengx.git
@@ -46,4 +47,3 @@ https://github.com/torhve/LuaWeb.git
 https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
-https://github.com/bakins/omnibus-nginx.git
