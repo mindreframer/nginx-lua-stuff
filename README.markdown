@@ -359,8 +359,11 @@ ngx-sample-bt
 -------------
 
 This script can be used to sample backtraces in either user space or kernel space
-or both for a specific Nginx worker process. It outputs the aggregated backgraces (by count). For example,
-to sample a running Nginx worker process (whose pid is 8736) in user space only for total 5 seconds:
+or both for *any* user process that you specify (yes, not just Nginx!).
+It outputs the aggregated backgraces (by count).
+
+For example, to sample a running Nginx worker process (whose pid is 8736) in user space
+only for total 5 seconds:
 
     $ ./ngx-sample-bt -p 8736 -t 5 -u > a.bt
     WARNING: Tracing 8736 (/opt/nginx/sbin/nginx) in user-space only...
@@ -807,7 +810,10 @@ hit Ctrl-C to end sampling:
 ngx-accept-queue
 ----------------
 
-This tool checks the SYN queue and ACK backlog queue for the sockets listening on the local port specified by the `--port` option. It can work on any server processes even it is not Nginx.
+This tool samples the SYN queue and ACK backlog queue for the sockets listening on the local port specified by the `--port` option
+for the time interval when it is running. It can work on any server processes even it is not Nginx.
+
+This is a real-time sampling tool.
 
 SYN queue or ACK backlog queue overflowing often results in connecting timeout errors on the client side.
 
@@ -825,6 +831,8 @@ By default, the tool prints out up to 10 queue overflow events and then quits im
     [Tue May 14 12:29:15 2013 PDT] ACK backlog queue is overflown: 129 > 128
     [Tue May 14 12:29:15 2013 PDT] ACK backlog queue is overflown: 129 > 128
     [Tue May 14 12:29:15 2013 PDT] ACK backlog queue is overflown: 129 > 128
+
+From the output, we can see a lot of ACK backlog queue overflows happening when the tool is running. This means the corresponding SYN packets were dropped in the kernel.
 
 You can specify the `--limit` option to control the maximal number of issues reported:
 
@@ -870,6 +878,8 @@ of the queue lengths:
       128 |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 250
       256 |                                                     0
       512 |                                                     0
+
+From the outputs, we can see that for 106 samples (i.e., 106 new connecting request), the SYN queue length remains 0; for samples, the SYN queue is of the length 1; and for 84 samples, the queue size is within the interval [2, 4); and so on. We can see most of the samples have the SYN queue size 0 ~ 8.
 
 You need to hit Ctrl-C to make this tool print out the histgram when the `--distr` option is specified. Alternatively, you can specify the `--time` option to specify the exact number of seconds for real-time sampling:
 
@@ -1012,6 +1022,52 @@ You can also specify the exact sampling time interval (in seconds) via the `--ti
 Successfully tested on Linux kernel 3.7 and should work for other versions of kernel as well.
 
 This tool requires a Linux kernel compiled by gcc 4.5+ (preferrably gcc 4.7+) because gcc versions older than 4.5 generated incomplete DWARF debug info for C inlined functions. It is also recommended to enable DWARF format version 3 or above when compiling the kernel (by passing the `-gdwarf-3` or `-gdwarf-4` option to the `gcc` command line).
+
+ngx-lua-conn-pools
+----------------
+
+Dumps connections pools status of [ngx_lua](http://wiki.nginx.org/HttpLuaModule), reports the number of both out-of-pool and in-pool connections, calculates connections reused times statistics of in-pool connections, and prints the capacity of each pool.
+
+Specify the `--lua51` option when you're using the standard Lua 5.1 interpreter in your Nginx build, or `--luajit20` if LuaJIT 2.0 is used instead.
+
+Here's a sample command:
+
+    # assuming the nginx worker pid is 19773
+    $ ./ngx-lua-conn-pools -p 19773 --luajit
+
+    Tracing 19773 (/opt/nginx/sbin/nginx)...
+    pool "127.0.0.1:11213"
+        out-of-pool connections: 185
+        in-pool connections: 183
+            reused times (max/min/avg): 9322 1042 3748
+        pool capacity: 1024
+
+    pool "127.0.0.1:11212"
+        out-of-pool connections: 184
+        in-pool connections: 182
+            reused times (max/min/avg): 10283 414 3408
+        pool capacity: 1024
+
+    pool "127.0.0.1:11211"
+        out-of-pool connections: 185
+        in-pool connections: 183
+            reused times (max/min/avg): 7109 651 3867
+        pool capacity: 1024
+
+    pool "127.0.0.1:11214"
+        out-of-pool connections: 185
+        in-pool connections: 183
+            reused times (max/min/avg): 7051 810 3807
+        pool capacity: 1024
+
+    pool "127.0.0.1:11215"
+        out-of-pool connections: 185
+        in-pool connections: 183
+            reused times (max/min/avg): 7275 1127 3839
+        pool capacity: 1024
+
+    For total 5 connection pool(s) found.
+    324 microseconds elapsed in the probe handler.
 
 Community
 =========
