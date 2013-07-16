@@ -157,9 +157,12 @@ echo "$info_txt applying patches/nginx-$main_ver-invalid_referer_hash.patch for 
 patch -p1 < $root/patches/nginx-$main_ver-invalid_referer_hash.patch || exit 1
 echo
 
-echo "$info_txt applying patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch for nginx"
-patch -p1 < $root/patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch
-echo
+answer=`$root/util/ver-ge "$main_ver" 1.4.1`
+if [ "$answer" = "Y" ]; then
+    echo "$info_txt applying patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch for nginx"
+    patch -p1 < $root/patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch
+    echo
+fi
 
 rm -f *.patch || exit 1
 
@@ -216,7 +219,7 @@ mv agentzh-rds-csv-nginx-module-* rds-csv-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.20
+ver=0.21
 $root/util/get-tarball "http://github.com/agentzh/headers-more-nginx-module/tarball/v$ver" -O headers-more-nginx-module-$ver.tar.gz || exit 1
 tar -xzf headers-more-nginx-module-$ver.tar.gz || exit 1
 mv agentzh-headers-more-nginx-module-* headers-more-nginx-module-$ver || exit 1
@@ -230,7 +233,7 @@ mv chaoslawful-drizzle-nginx-module-* drizzle-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.8.2
+ver=0.8.4
 $root/util/get-tarball "http://github.com/chaoslawful/lua-nginx-module/tarball/v$ver" -O lua-nginx-module-$ver.tar.gz || exit 1
 tar -xzf lua-nginx-module-$ver.tar.gz || exit 1
 mv chaoslawful-lua-nginx-module-* ngx_lua-$ver || exit 1
