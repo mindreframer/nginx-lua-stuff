@@ -196,6 +196,10 @@ Examples for OpenResty:
       this is sample program to use bandit algorithm with nginx + lua
        3 commits, last change: 2013-06-27 21:08:34, 1 stars, 0 forks
 
+    fcambus/telize:
+      Telize is a JSON IP and GeoIP REST API (IP Geolocation) built on Nginx and Lua
+       2 commits, last change: 2013-08-25 23:18:26, 18 stars, 0 forks
+
     garethr/nginx-json-proxy:
       An experiment with openresty, lua and nginx
        2 commits, last change: 2013-07-02 12:26:41, 1 stars, 1 forks
