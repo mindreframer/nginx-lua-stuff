@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Nginx Lua In Action</title>
+        <meta name="description" content="Nginx Lua In Action">
+	    <meta name="author" content="Rebill">
+	    <meta name="apple-mobile-web-app-capable" content="yes" />
+	    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	    <link rel="stylesheet" href="css/reveal.min.css">
+	    <link rel="stylesheet" href="css/theme/serif.css" id="theme">
+	    <!-- For syntax highlighting -->
+	    <link rel="stylesheet" href="lib/css/zenburn.css">
+	    <!--[if lt IE 9]>
+	    <script src="lib/js/html5shiv.js"></script>
+	    <![endif]-->
+	</head>
+	<body>
+	    <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>Nginx Lua In Action</h1>
+                </section>
+                <section>                    
+                    <h2>Getting started</h2>
+                    <ul>
+                       <li class="fragment">Installation</li>
+                       <li class="fragment">Configuration</li>
+                    </ul>                    
+                </section>
+                <section>
+                    <h3>Installation</h3>
+                    <pre><code>
+git clone https://github.com/chaoslawful/lua-nginx-module.git
+
+# tell nginx's build system where to find LuaJIT:
+export LUAJIT_LIB=/path/to/luajit/lib
+export LUAJIT_INC=/path/to/luajit/include/luajit-2.0
+
+# or tell where to find Lua if using Lua instead:
+# export LUA_LIB=/path/to/lua/lib
+# export LUA_INC=/path/to/lua/include
+
+./configure --add-module=/path/to/lua-nginx-module
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>Configuration</h3>
+                    <pre><code>
+http {
+
+    # set search paths for pure Lua external libraries (';;' is the default path):
+    lua_package_path '/foo/bar/?.lua;/blah/?.lua;;';
+
+    # set search paths for Lua external libraries written in C (can also use ';;'):
+    lua_package_cpath '/bar/baz/?.so;/blah/blah/?.so;;';
+
+    server {
+        listen 80;
+        server_name www.example.com;
+
+        location / {
+            rewrite_by_lua_file /path/to/rewrite.lua;
+            access_by_lua_file /path/to/access.lua;
+            content_by_lua_file /path/to/content.lua;
+        }
+    }        
+}    
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Application Development in Nginx Lua</h2>
+                    <ul>
+                       <li class="fragment">APIs</li>
+                       <li class="fragment">Libraries</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>init_by_lua</h3>
+                    <pre><code>
+init_by_lua 'cjson = require "cjson"';
+server {
+    location = /api {
+        content_by_lua '
+            ngx.say(cjson.encode({dog = 5, cat = 6}))
+        ';
+    }
+}  
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>set_by_lua</h3>
+                    <pre><code>
+location /foo {
+    set $diff ''; # we have to predefine the $diff variable here
+
+    set_by_lua $sum '
+        local a = 32
+        local b = 56
+
+        ngx.var.diff = a - b;  -- write to $diff directly
+        return a + b;          -- return the $sum value normally
+    ';
+
+    echo "sum = $sum, diff = $diff";
+}
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>content_by_lua</h3>
+                    <pre><code>
+location /lua_content {
+    # MIME type determined by default_type:
+    default_type 'text/plain';
+
+    content_by_lua "ngx.say('Hello,world!')";
+}
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>rewrite_by_lua</h3>
+                    <pre><code>
+location /foo {
+    set $a 12; # create and initialize $a
+    set $b ''; # create and initialize $b
+    rewrite_by_lua 'ngx.var.b = tonumber(ngx.var.a) + 1';
+    if ($b = '13') {
+       rewrite ^ /bar redirect;
+       break;
+    }
+
+    echo "res = $b";
+}
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>access_by_lua</h3>
+                    <pre><code>
+location / {
+    access_by_lua '
+        local res = ngx.location.capture("/auth")
+
+        if res.status == ngx.HTTP_OK then
+            return
+        end
+
+        if res.status == ngx.HTTP_FORBIDDEN then
+            ngx.exit(res.status)
+        end
+
+        ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+    ';
+
+    # proxy_pass/fastcgi_pass/postgres_pass/...
+}
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>lua_shared_dict</h3>
+                    <pre><code>
+http {
+    lua_shared_dict dogs 10m;
+    server {
+        location /set {
+            content_by_lua '
+                local dogs = ngx.shared.dogs
+                dogs:set("Jim", 8)
+                ngx.say("STORED")
+            ';
+        }
+        location /get {
+            content_by_lua '
+                local dogs = ngx.shared.dogs
+                ngx.say(dogs:get("Jim"))
+            ';
+        }
+    }
+}    
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>More ?</h3>
+                    <p><a href="http://wiki.nginx.org/HttpLuaModule">HttpLuaModule</a></p>
+                </section>
+                <section>
+                    <h3>Libraries</h3>
+                    <ul>
+                        <li><a href="http://github.com/agentzh/lua-resty-memcached">lua-resty-memcached</a></li>
+                        <li><a href="http://github.com/agentzh/lua-resty-redis">lua-resty-redis</a></li>
+                        <li><a href="http://github.com/agentzh/lua-resty-mysql">lua-resty-mysql</a></li>
+                        <li><a href="http://github.com/agentzh/lua-resty-upload">lua-resty-upload</a></li>
+                        <li><a href="http://github.com/agentzh/lua-resty-dns">lua-resty-dns</a></li>
+                        <li><a href="http://github.com/agentzh/lua-resty-string">lua-resty-string</a></li>
+                        <li><a href="http://openresty.org/">more ... </a></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Nginx Lua Mastery</h2>
+                    <ul>
+                       <li class="fragment">Performance Optimization</li>
+                       <li class="fragment">Monitoring and Diagnosing</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Performance Optimization</h3>
+                    <ul>
+                        <li><a href="http://manual.luaer.cn/">Lua 5.1 中文手册</a></li>
+                        <li><a href="http://blog.codingnow.com/cloud">云风个人Wiki</a></li>
+                        <li><a href="http://blog.codingnow.com/eo/luaoeeeaeau/">云风的 BLOG</a></li>
+                        <li><a href="http://www.lua.org/gems/sample.pdf">Lua Performance Tips</a></li>
+                        <li><a href="http://www.cnblogs.com/gdev/archive/2012/08/22/lua-performance-tips.html">Lua性能优化技巧</a></li>                        
+                        <li><a href="#">more ... </a></li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Monitoring and Diagnosing</h3>
+                    <ul>
+                        <li><a href="https://github.com/agentzh/nginx-systemtap-toolkit">nginx-systemtap-toolkit</a></li>
+                        <li><a href="#">more ... </a></li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+        
+        <script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+		
+		<script>
+		Reveal.initialize({
+
+            // Display controls in the bottom right corner
+            controls: true,
+
+            // Display a presentation progress bar
+            progress: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable touch events for navigation
+            touch: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change the presentation direction to be RTL
+            rtl: false,
+
+            // Number of milliseconds between automatically proceeding to the
+            // next slide, disabled when set to 0, this value can be overwritten
+            // by using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Apply a 3D roll to links on hover
+            rollingLinks: true,
+
+            // Transition style
+            transition: 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page backgrounds
+            backgroundTransition: 'default', // default/linear
+            
+            dependencies: [
+                // Cross-browser shim that fully implements classList - https://github.com/eligrey/classList.js/
+                { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+
+                // Interpret Markdown in <section> elements
+                { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+
+                // Syntax highlight for <code> elements
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+
+                // Zoom in and out with Alt+click
+                //{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+
+                // Speaker notes
+                //{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+
+                // Remote control your reveal.js presentation using a touch device
+                //{ src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+            ]
+
+        });
+		</script>
+	</body>
+</html>	
