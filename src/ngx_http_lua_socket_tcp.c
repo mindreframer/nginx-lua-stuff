@@ -45,7 +45,8 @@ static void ngx_http_lua_socket_tcp_finalize(ngx_http_request_t *r,
     ngx_http_lua_socket_tcp_upstream_t *u);
 static ngx_int_t ngx_http_lua_socket_send(ngx_http_request_t *r,
     ngx_http_lua_socket_tcp_upstream_t *u);
-static ngx_int_t ngx_http_lua_socket_test_connect(ngx_connection_t *c);
+static ngx_int_t ngx_http_lua_socket_test_connect(ngx_http_request_t *r,
+    ngx_connection_t *c);
 static void ngx_http_lua_socket_handle_error(ngx_http_request_t *r,
     ngx_http_lua_socket_tcp_upstream_t *u, ngx_uint_t ft_type);
 static void ngx_http_lua_socket_handle_success(ngx_http_request_t *r,
@@ -915,6 +916,7 @@ static int
 ngx_http_lua_socket_error_retval_handler(ngx_http_request_t *r,
     ngx_http_lua_socket_tcp_upstream_t *u, lua_State *L)
 {
+    ngx_uint_t       ft_type;
     u_char           errstr[NGX_MAX_ERROR_STR];
     u_char          *p;
 
@@ -925,27 +927,35 @@ ngx_http_lua_socket_error_retval_handler(ngx_http_request_t *r,
         u->co_ctx->cleanup = NULL;
     }
 
-    ngx_http_lua_socket_tcp_finalize(r, u);
+    ft_type = u->ft_type;
 
-    if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_RESOLVER) {
+    if (u->no_close) {
+        u->no_close = 0;
+        u->ft_type = 0;
+
+    } else {
+        ngx_http_lua_socket_tcp_finalize(r, u);
+    }
+
+    if (ft_type & NGX_HTTP_LUA_SOCKET_FT_RESOLVER) {
         return 2;
     }
 
     lua_pushnil(L);
 
-    if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_TIMEOUT) {
+    if (ft_type & NGX_HTTP_LUA_SOCKET_FT_TIMEOUT) {
         lua_pushliteral(L, "timeout");
 
-    } else if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_CLOSED) {
+    } else if (ft_type & NGX_HTTP_LUA_SOCKET_FT_CLOSED) {
         lua_pushliteral(L, "closed");
 
-    } else if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_BUFTOOSMALL) {
+    } else if (ft_type & NGX_HTTP_LUA_SOCKET_FT_BUFTOOSMALL) {
         lua_pushliteral(L, "buffer too small");
 
-    } else if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_NOMEM) {
+    } else if (ft_type & NGX_HTTP_LUA_SOCKET_FT_NOMEM) {
         lua_pushliteral(L, "out of memory");
 
-    } else if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_CLIENTABORT) {
+    } else if (ft_type & NGX_HTTP_LUA_SOCKET_FT_CLIENTABORT) {
         lua_pushliteral(L, "client aborted");
 
     } else {
@@ -1809,6 +1819,10 @@ ngx_http_lua_socket_tcp_receive_retval_handler(ngx_http_request_t *r,
 
     if (u->ft_type) {
 
+        if (u->ft_type & NGX_HTTP_LUA_SOCKET_FT_TIMEOUT) {
+            u->no_close = 1;
+        }
+
         dd("u->bufs_in: %p", u->bufs_in);
 
         if (u->bufs_in) {
@@ -1990,6 +2004,8 @@ ngx_http_lua_socket_read_handler(ngx_http_request_t *r,
                    "lua tcp socket read handler");
 
     if (c->read->timedout) {
+        c->read->timedout = 0;
+
         llcf = ngx_http_get_module_loc_conf(r, ngx_http_lua_module);
 
         if (llcf->log_socket_errors) {
@@ -2242,7 +2258,7 @@ ngx_http_lua_socket_connected_handler(ngx_http_request_t *r,
         ngx_del_timer(c->write);
     }
 
-    rc = ngx_http_lua_socket_test_connect(c);
+    rc = ngx_http_lua_socket_test_connect(r, c);
     if (rc != NGX_OK) {
         if (rc > 0) {
             u->socket_errno = (ngx_err_t) rc;
@@ -2371,10 +2387,12 @@ ngx_http_lua_socket_tcp_finalize(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_lua_socket_test_connect(ngx_connection_t *c)
+ngx_http_lua_socket_test_connect(ngx_http_request_t *r, ngx_connection_t *c)
 {
     int              err;
     socklen_t        len;
+
+    ngx_http_lua_loc_conf_t     *llcf;
 
 #if (NGX_HAVE_KQUEUE)
 
@@ -2395,9 +2413,12 @@ ngx_http_lua_socket_test_connect(ngx_connection_t *c)
         }
 
         if (ev) {
-            (void) ngx_connection_error(c, ev->kq_errno,
-                                        "kevent() reported that connect() "
-                                        "failed");
+            llcf = ngx_http_get_module_loc_conf(r, ngx_http_lua_module);
+            if (llcf->log_socket_errors) {
+                (void) ngx_connection_error(c, ev->kq_errno,
+                                            "kevent() reported that "
+                                            "connect() failed");
+            }
             return ev->kq_errno;
         }
 
@@ -2419,7 +2440,10 @@ ngx_http_lua_socket_test_connect(ngx_connection_t *c)
         }
 
         if (err) {
-            (void) ngx_connection_error(c, err, "connect() failed");
+            llcf = ngx_http_get_module_loc_conf(r, ngx_http_lua_module);
+            if (llcf->log_socket_errors) {
+                (void) ngx_connection_error(c, err, "connect() failed");
+            }
             return err;
         }
     }
@@ -3137,8 +3161,7 @@ ngx_http_lua_req_socket(lua_State *L)
     }
 
     lua_settop(L, 1);
-    lua_pushnil(L);
-    return 2;
+    return 1;
 }
 
 
