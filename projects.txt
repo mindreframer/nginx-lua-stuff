@@ -37,6 +37,7 @@ https://github.com/leafo/moonrocks-site.git
 https://github.com/liseen/lua-resty-http.git
 https://github.com/medcl/lua-resty-weedfs.git
 https://github.com/mindreframer/github-auth-nginx.git
+https://github.com/miurahr/lua-nginx-osm.git
 https://github.com/observing/balancerbattle.git
 https://github.com/Olivine-Labs/resty-mongol.git
 https://github.com/pgaertig/nginx-big-upload.git
@@ -51,4 +52,3 @@ https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
-https://github.com/miurahr/lua-nginx-osm.git
