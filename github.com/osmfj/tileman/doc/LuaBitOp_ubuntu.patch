@@ -1,0 +1,23 @@
+LuaBitOp installation
+
+If you want to install LuaBitOp manually, following instructions
+are for you.
+
+wget http://bitop.luajit.org/download/LuaBitOp-1.0.2.tar.gz
+tar xf LuaBitOp-1.0.2.tar.gz
+(cd LuaBitOp-1.0.2 ; \
+     patch -p1 -i ../LuaBitOp_ubuntu.patch && \
+     make LUA=lua5.1&& \
+     sudo make LUA=lua5.1 install)
+
+--- LuaBitOp-1.0.2/Makefile.orig	2013-04-07 14:24:38.676583433 +0900
++++ LuaBitOp-1.0.2/Makefile	2013-04-07 14:24:49.344583730 +0900
+@@ -3,7 +3,7 @@
+ # To compile with MinGW please run: mingw32-make -f Makefile.mingw
+ 
+ # Include path where lua.h, luaconf.h and lauxlib.h reside:
+-INCLUDES= -I/usr/local/include
++INCLUDES= -I/usr/include/lua5.1/
+ 
+ DEFINES=
+ # Use this for the old ARM ABI with swapped FPA doubles.

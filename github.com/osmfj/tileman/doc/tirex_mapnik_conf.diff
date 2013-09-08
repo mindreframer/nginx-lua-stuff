@@ -1,0 +1,25 @@
+--- ../tirex/etc/renderer/mapnik.conf.dist	2013-06-02 12:16:11.941323357 +0900
++++ osmj/tirex/renderer/mapnik.conf	2013-06-12 07:47:14.062156835 +0900
+@@ -21,7 +21,7 @@
+ port=9331
+ 
+ #  number of processes that should be started
+-procs=3
++procs=4
+ 
+ #  syslog facility
+ #syslog_facility=daemon
+@@ -39,10 +39,11 @@
+ #  The directory where the Mapnik rendering engine loads its TrueType fonts from.
+ #  If the style sheet references fonts that are not present here, the renderer will 
+ #  throw an exception.
+-fontdir=/usr/lib/mapnik/fonts
++#fontdir=/usr/lib/mapnik/fonts
++fontdir=/usr/share/fonts/truetype
+ 
+ #  Set this to 1 if you want fonts loaded recursively from directories
+ #  inside the mapnik_fontdir directory. Defaults to 0.
+-#fontdir_recurse=0
++fontdir_recurse=1
+ 
+ #-- THE END ------------------------------------------------------------------

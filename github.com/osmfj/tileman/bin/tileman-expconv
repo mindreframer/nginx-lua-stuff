@@ -1,0 +1,72 @@
+#!/usr/bin/env lua5.1
+--
+-- Copyright 2013, Hiroshi Miura, miurahr@osmf.jp
+-- Accept modifications by Stephan Knauss, info@osm-tools.org
+--
+
+require "io"
+require "string"
+require "math"
+local tile = require "osm.tile"
+
+if arg[1] == "-h" then
+    print("osm-expconv - convert expire.list to tirex form")
+    print("For every given tile it will return that tile in tirex-batch format including a list off all subtiles down to MAXZOOM.")
+    print("In case the optional parameter MINZOOM is given it will also print the parent tiles up to MINZOOM.")
+    print("It will never output tiles on zoom levels larger then MAXZOOM or smaller than MINZOOM.")
+    print(" ")
+    print("  osm-expconv [-h] MAPNAME MAXZOOM [MINZOOM]")
+    os.exit(0)
+end
+
+if not arg[2] then
+    print("Too few arguments")
+    os.exit(1)
+end
+
+local minz = -1
+if arg[3] then
+    minz = tonumber(arg[3])
+end
+local maxz = tonumber(arg[2])
+local map  = arg[1]
+
+-- main
+local captures = "(%d+)/(%d+)/(%d+)"
+local res = {}
+for line in io.stdin:lines() do
+    local s,_,sz,sx,sy = string.find(line, captures)
+    if not s then
+        break
+    end
+    local x = tonumber(sx)
+    local y = tonumber(sy)
+    local z = tonumber(sz)
+    if minz < 0 then
+        minz = z
+    end
+    if tile.check_integrity_xyz(x, y, z) then
+        if z <= maxz and z >= minz then
+            io.stdout:write(string.format("map=%s x=%d y=%d z=%d\n", map, x, y, z))
+        end
+        -- walk down towards larger zoom levels
+        for i = 1, maxz - z do
+            local nx, ny = tile.zoom_num(x, y, z, z + i)
+            io.stdout:write(string.format("map=%s x=%d-%d y=%d-%d z=%d\n", map, nx, nx+i*2-1, ny, ny+i*2-1, z+i))
+        end
+        -- walk up towards smaller zoom levels
+        for i = math.max(1, z-maxz), z - minz do
+            local nx, ny = tile.zoom_num(x, y, z, z -i)
+            local index = string.format("%d:%d:%d", z-i, nx, ny) -- excape duplication
+            res[index] = string.format("map=%s x=%d y=%d z=%d\n", map, nx, ny, z-i)
+        end
+    end
+end
+-- print smaller zoom levels
+for k, v in pairs(res) do
+    if v then
+        io.stdout:write(v)
+    end
+end
+
+-- EOF --

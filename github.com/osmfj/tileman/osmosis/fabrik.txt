@@ -1,0 +1,8 @@
+# osmosis/configuration.txt 
+# The URL of the directory containing change files.
+baseUrl=http://download.geofabrik.de/asia/japan-updates/
+
+# Defines the maximum time interval in seconds to download in a single invocation.
+# Setting to 0 disables this feature.
+maxInterval = 86400
+

@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# tileman-update
+#
+# Get osm changes and update PostGIS database
+# osmosis configuration should be in $WORKER_DIR
+#
+# Licensed in GPLv3
+# Copyright 2013, Hiroshi Miura <miurahr@osmf.jp>
+#
+# ----------------------------
+# ChnageLog
+#
+# 2013-07-02 change command name to tileman-update
+# ----------------------------
+#
+NAME=tileman-update
+CONF=tileman.conf
+# Read configuration variable file if it is present
+[ -r "/etc/${CONF}" ] && . "/etc/${CONF}"
+
+WORKDIR_OSM=${WORKDIR_OSM:=/var/opt/osmosis}
+DBUSER=${DBUSER:=osm}
+DBNAME=${DBNAME:=gis}
+OSMOSIS_BIN=${OSMOSIS_BIN:=/opt/osmosis/bin/osmosis}
+OSM2PGSQL_BIN=${OSM2PGSQL_BIN:=/usr/bin/osm2pgsql}
+PSQL_BIN=${PSQL_BIN:=/usr/bin/psql}
+
+TIREX_BATCH_BIN=${TIREX_BATCH_BIN:=/usr/bin/tirex-batch}
+TILEDIR=${TILEDIR:=/var/lib/tirex/tiles}
+MAPNAME=${MAPNAME:=custom}
+
+OSC_PIPE=/tmp/changes_osc.$$
+
+EXPIRE_FILE=$WORKDIR_OSM/expire.list.$$
+OSMOSIS_OPT="--read-replication-interval workingDirectory=$WORKDIR_OSM --simplify-change --write-xml-change"
+DB_OPT="-U $DBUSER -d $DBNAME"
+OSM2PGSQL_OPT="--append $DB_OPT --slim -a -e${EXPIRE_ZOOM}"
+
+EXPIRE_ZOOM=${EXPIRE_ZOOM:=15}
+MINZOOM=${MINZOOM:=12}
+MAXZOOM=${MAXZOOM:=18}
+FILTER=${FILTER:=exists}
+
+function cleanup_bbox () {
+    $PSQL_BIN $DB_OPT -w << _EOL_
+      DELETE FROM planet_osm_ways AS w WHERE 0 = (SELECT COUNT(1) FROM planet_osm_nodes AS n WHERE n.id = ANY(w.nodes));
+      DELETE FROM planet_osm_rels AS r WHERE 
+         0=(SELECT COUNT(1) FROM planet_osm_nodes AS n WHERE n.id = ANY(r.parts)) 
+         AND
+         0=(SELECT COUNT(1) FROM planet_osm_ways AS w WHERE w.id = ANY(r.parts));
+      REINDEX TABLE planet_osm_ways;
+      REINDEX TABLE planet_osm_rels;
+      VACUUM;
+_EOL_
+}
+
+function check_exec () {
+  if [ ! -x $OSMOSIS_BIN ] ; then
+     echo "Error: $OSMOSIS_BIN doesn't exist."
+     echo
+     exit 1
+  elif [ ! -x $PSQL_BIN ] ; then
+     echo "Error: $PSQL_BIN doesn't exist."
+     echo
+     exit 1
+  elif [ ! -x $OSM2PGSQL_BIN ] ; then
+     echo "Error: $OSM2PGSQL_BIN doesn't exist."
+     echo
+     exit 1
+  elif [ ! -x $TIREX_BATCH_BIN ] ; then
+     echo "Error: $TIREX_BATCH_BIN doesn't exist."
+     echo
+     exit 1
+  fi
+}
+
+
+while getopts "bcdhuv" opts; do
+    case $opts in 
+    c)
+    CLEAN_FLAG=yes
+    ;;
+    b)
+    CLEAN_OUTOFBB_FLAG=yes
+    ;;
+    d)
+    DEBUG_FLAG=yes
+    ;;
+    h)
+    #show help and exit
+    echo "$0: get osm change file and update postgis db"
+    echo " "
+    echo "It takes addtional options as follows: "
+    echo "'-b': clwan-up out-of-bounding-box ways"
+    echo "'-c': compact size of PostGIS."
+    echo "'-d': show debug messages"
+    echo "'-u': launch expire_rended to refresh expired tile"
+    echo "'-v': show version"
+    exit 0
+    ;;
+    v)
+    echo "$0: get osm change file and update postgis db"
+    exit 0
+    ;;
+    u)
+    TILE_UPDATE_FLAG=yes
+    ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+check_exec
+mkfifo $OSC_PIPE
+if [ "${TILE_UPDATE_FLAG}" = "yes" ]; then
+  $OSMOSIS_BIN $OSMOSIS_OPT $OSC_PIPE &
+  $OSM2PGSQL_BIN $OSM2PGSQL_OPT -o $EXPIRE_FILE $OSC_PIPE 
+  cat $EXPIRE_FILE | tileman-expconv $MAPNAME $MAXZOOM | $TIREX_BATCH_BIN -f $FILTER -p 10 &
+  cat $EXPIRE_FILE | tileman-expconv $MAPNAME $EXPIRE_ZOOM $MINZOOM | $TIREX_BATCH_BIN -f $FILTER -p 15 &
+else
+  $OSMOSIS_BIN $OSMOSIS_OPT $OSC_PIPE &
+  $OSM2PGSQL_BIN $OSM2PGSQL_OPT -o $EXPIRE_FILE $OSC_PIPE
+fi
+rm -f $OSC_PIPE
+rm -f $EXPIRE_FILE
+
+if [ "${CLEAN_OUTOFBB_FLAG}" = "yes" ]; then
+  cleanup_bbox
+fi
+
+exit 0
