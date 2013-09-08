@@ -109,13 +109,19 @@ echo "$info_txt applying the location_if_inherits_proxy patch for nginx"
 patch -p1 < $root/patches/nginx-$main_ver-location_if_inherits_proxy.patch || exit 1
 echo
 
-echo "$info_txt applying the upstream_truncation patch for nginx"
-patch -p1 < $root/patches/nginx-$main_ver-upstream_truncation.patch || exit 1
-echo
+answer=`$root/util/ver-ge "$main_ver" 1.5.3`
+if [ "$answer" = "N" ]; then
+    echo "$info_txt applying the upstream_truncation patch for nginx"
+    patch -p1 < $root/patches/nginx-$main_ver-upstream_truncation.patch || exit 1
+    echo
+fi
 
-echo "$info_txt applying the channel-uninit-params patch for nginx"
-patch -p1 < $root/patches/nginx-$main_ver-channel-uninit-params.patch || exit 1
-echo
+answer=`$root/util/ver-ge "$main_ver" 1.5.3`
+if [ "$answer" = "N" ]; then
+    echo "$info_txt applying the channel-uninit-params patch for nginx"
+    patch -p1 < $root/patches/nginx-$main_ver-channel-uninit-params.patch || exit 1
+    echo
+fi
 
 echo "$info_txt applying the dtrace patch for nginx"
 patch -p1 < $root/patches/nginx-$main_ver-dtrace.patch || exit 1
@@ -153,14 +159,24 @@ if [ "$answer" = "N" ]; then
     echo
 fi
 
-echo "$info_txt applying patches/nginx-$main_ver-invalid_referer_hash.patch for nginx"
-patch -p1 < $root/patches/nginx-$main_ver-invalid_referer_hash.patch || exit 1
-echo
+answer=`$root/util/ver-ge "$main_ver" 1.5.3`
+if [ "$answer" = "N" ]; then
+    echo "$info_txt applying patches/nginx-$main_ver-invalid_referer_hash.patch for nginx"
+    patch -p1 < $root/patches/nginx-$main_ver-invalid_referer_hash.patch || exit 1
+    echo
+fi
 
 answer=`$root/util/ver-ge "$main_ver" 1.4.1`
 if [ "$answer" = "Y" ]; then
     echo "$info_txt applying patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch for nginx"
     patch -p1 < $root/patches/nginx-$main_ver-gcc-maybe-uninitialized-warning.patch
+    echo
+fi
+
+answer=`$root/util/ver-ge "$main_ver" 1.5.3`
+if [ "$answer" = "N" ]; then
+    echo "$info_txt applying the unix_socket_accept_over_read patch for lua $ver"
+    patch -p1 < $root/patches/nginx-$ver-unix_socket_accept_over_read.patch || exit 1
     echo
 fi
 
@@ -177,7 +193,7 @@ rm -rf no-pool-nginx-$ver
 
 #################################
 
-ver=0.45
+ver=0.47
 $root/util/get-tarball "http://github.com/agentzh/echo-nginx-module/tarball/v$ver" -O echo-nginx-module-$ver.tar.gz || exit 1
 tar -xzf echo-nginx-module-$ver.tar.gz || exit 1
 mv agentzh-echo-nginx-module-* echo-nginx-module-$ver || exit 1
@@ -219,21 +235,21 @@ mv agentzh-rds-csv-nginx-module-* rds-csv-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.21
+ver=0.22
 $root/util/get-tarball "http://github.com/agentzh/headers-more-nginx-module/tarball/v$ver" -O headers-more-nginx-module-$ver.tar.gz || exit 1
 tar -xzf headers-more-nginx-module-$ver.tar.gz || exit 1
 mv agentzh-headers-more-nginx-module-* headers-more-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.1.5
+ver=0.1.6
 $root/util/get-tarball "http://github.com/chaoslawful/drizzle-nginx-module/tarball/v$ver" -O drizzle-nginx-module-$ver.tar.gz || exit 1
 tar -xzf drizzle-nginx-module-$ver.tar.gz || exit 1
 mv chaoslawful-drizzle-nginx-module-* drizzle-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.8.4
+ver=0.8.7
 $root/util/get-tarball "http://github.com/chaoslawful/lua-nginx-module/tarball/v$ver" -O lua-nginx-module-$ver.tar.gz || exit 1
 tar -xzf lua-nginx-module-$ver.tar.gz || exit 1
 mv chaoslawful-lua-nginx-module-* ngx_lua-$ver || exit 1
@@ -247,14 +263,14 @@ mv agentzh-array-var-nginx-module-* array-var-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.13rc3
+ver=0.13
 $root/util/get-tarball "http://github.com/agentzh/memc-nginx-module/tarball/v$ver" -O memc-nginx-module-$ver.tar.gz || exit 1
 tar -xzf memc-nginx-module-$ver.tar.gz || exit 1
 mv agentzh-memc-nginx-module-* memc-nginx-module-$ver || exit 1
 
 #################################
 
-ver=0.21
+ver=0.22
 $root/util/get-tarball "http://github.com/agentzh/srcache-nginx-module/tarball/v$ver" -O srcache-nginx-module-$ver.tar.gz || exit 1
 tar -xzf srcache-nginx-module-$ver.tar.gz || exit 1
 mv agentzh-srcache-nginx-module-* srcache-nginx-module-$ver || exit 1
@@ -309,7 +325,7 @@ cd ..
 
 #################################
 
-ver=1.0rc2
+ver=1.0rc3
 $root/util/get-tarball "https://github.com/FRiCKLE/ngx_postgres/tarball/$ver" -O ngx_postgres-$ver.tar.gz || exit 1
 tar -xzf ngx_postgres-$ver.tar.gz || exit 1
 mv FRiCKLE-ngx_postgres-* ngx_postgres-$ver || exit 1
@@ -399,7 +415,7 @@ mv agentzh-lua-rds-parser-* lua-rds-parser-$ver || exit 1
 
 #################################
 
-ver=0.09
+ver=0.10
 $root/util/get-tarball "http://github.com/agentzh/lua-resty-dns/tarball/v$ver" -O "lua-resty-dns-$ver.tar.gz" || exit 1
 tar -xzf lua-resty-dns-$ver.tar.gz || exit 1
 mv agentzh-lua-resty-dns-* lua-resty-dns-$ver || exit 1
