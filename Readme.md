@@ -216,6 +216,10 @@ Examples for OpenResty:
       a clone from https://gist.github.com/6005442 (lusis)
        2 commits, last change: 2013-07-15 20:06:19, 1 stars, 0 forks
 
+    miurahr/lua-nginx-osm:
+      OpenStreetMap extension for Nginx Lua module
+       41 commits, last change: 2013-08-07 22:29:51, 3 stars, 3 forks
+
     observing/balancerbattle:
       WebSocket loadbalancer battle
        53 commits, last change: 2013-05-24 01:27:01, 249 stars, 14 forks
