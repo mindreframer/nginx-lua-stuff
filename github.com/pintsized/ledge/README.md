@@ -188,6 +188,7 @@ Review the [lua-nginx-module](http://wiki.nginx.org/HttpLuaModule) documentation
 
 Clone this repo into a path defined by [lua_package_path](http://wiki.nginx.org/HttpLuaModule#lua_package_path) in `nginx.conf`.
 
+Note: You should enable the [lua_check_client_abort](http://wiki.nginx.org/HttpLuaModule#lua_check_client_abort) directive to avoid ophaned connections to both the origin and Redis.
 
 ## Configuration options
 
@@ -261,17 +262,12 @@ ngx_lua defaults to *60s*, overridable per worker process by using the `lua_sock
 
 ngx_lua defaults to *30*, overridable per worker process by using the `lua_socket_pool_size` directive.
 
-#### redis_use_sentinel
-
-*Default:* `false`
-
-Use sentinel to obtain the details of a Redis server to be used. Please be sure to (read these docs)[http://redis.io/topics/sentinel] in order to understand the capabilities and behaviours of Sentinel
 
 #### redis_use_sentinel
 
 *Default:* `false`
 
-Use Sentinel to obtain the details of a Redis server to be used. Please be sure to (read these docs)[http://redis.io/topics/sentinel] in order to understand the capabilities and behaviours of Sentinel.
+Use Sentinel to obtain the details of a Redis server to be used. Please be sure to [read these docs](http://redis.io/topics/sentinel) in order to understand the capabilities and behaviours of Sentinel.
 
 #### redis_sentinels
 
@@ -283,7 +279,7 @@ Provide a table of Sentinel hosts to try in order. Once connected Ledge will ask
 
 *Default:* `mymaster`
 
-The name of the master to use. Again, refer to the (Sentinel docs)[http://redis.io/topics/sentinel] for an explanation.
+The name of the master to use. Again, refer to the [Sentinel docs](http://redis.io/topics/sentinel) for an explanation.
 
 #### cache_key_spec
 
@@ -334,6 +330,13 @@ Specifies, in seconds, how far past expiry to serve cached content.
 If set to `nil` then determine this from the `Cache-Control: max-stale=xx` request header.
 
 WARNING: Any setting other than `nil` violates the HTTP spec.
+
+#### stale_if_error
+
+*Default:* `nil`
+
+Specifies, in seconds, how far past expiry to serve cached content if the origin returns an error.
+If set to `nil` then determine this from the `Cache-Control: stale-if-error=xx` request header.
 
 #### background_revalidate
 
