@@ -160,6 +160,10 @@ Examples for OpenResty:
       A Squiz Lua module for OpenResty to provide an error-tolerant set of tools allowing for the succinct implementation of logic directly in the webserver configuration file.
        9 commits, last change: , 0 stars, 0 forks
 
+    bigplum/lua-resty-mongol:
+      A ngx_lua driver for mongodb
+       54 commits, last change: 2013-06-14 01:43:45, 42 stars, 16 forks
+
     bsm/fakengx:
       Library for testing Lua scripts embedded into Nginx
        24 commits, last change: , 4 stars, 0 forks
@@ -211,6 +215,10 @@ Examples for OpenResty:
     observing/balancerbattle:
       WebSocket loadbalancer battle
        53 commits, last change: 2013-05-24 01:27:01, 249 stars, 14 forks
+
+    Olivine-Labs/resty-mongol:
+      Lua MongoDB driver
+       58 commits, last change: 2013-06-29 06:59:56, 0 stars, 0 forks
 
     pgaertig/nginx-big-upload:
       Resumable and reliable file uploads of any size. Nginx extension written in Lua.
