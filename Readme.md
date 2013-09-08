@@ -188,6 +188,10 @@ Examples for OpenResty:
       lua-nginx bindings to inspect upstream cache meta-data
        9 commits, last change: 2012-08-14 20:43:23, 4 stars, 4 forks
 
+    dererk/dt:
+      URL Shortening PoC based on embbeded nginx Lua interpreter
+       16 commits, last change: 2013-02-28 07:44:29, 0 stars, 1 forks
+
     desbouis/nginx-redis-proxy:
       Nginx as reverse proxy using redis as cache engine
        44 commits, last change: 2012-03-21 16:49:42, 23 stars, 2 forks
