@@ -1142,10 +1142,14 @@ sub run_test ($) {
                             #warn("$name - Failed to send quit signal to the nginx process with PID $pid");
                         }
 
-                        sleep $TestNginxSleep;
+                        my $max_i = 15;
+                        for (my $i = 1; $i <= $max_i; $i++) {
+                            last unless is_running($pid);
 
-                        if (is_running($pid)) {
-                            warn "WARNING: killing nginx $pid with force...";
+                            sleep $TestNginxSleep;
+                            next if $i < $max_i;
+
+                            warn "WARNING: $name - killing nginx $pid with force...";
                             kill(SIGKILL, $pid);
                             waitpid($pid, 0);
                         }
@@ -1204,10 +1208,14 @@ sub run_test ($) {
                     #warn("$name - Failed to send quit signal to the nginx process with PID $pid");
                 }
 
-                sleep $TestNginxSleep;
+                my $max_i = 15;
+                for (my $i = 1; $i <= $max_i; $i++) {
+                    last unless is_running($pid);
 
-                if (is_running($pid)) {
-                    warn "WARNING: killing nginx $pid with force...";
+                    sleep $TestNginxSleep;
+                    next if $i < $max_i;
+
+                    warn "WARNING: $name - killing nginx $pid with force...";
                     kill(SIGKILL, $pid);
                     waitpid($pid, 0);
                 }
@@ -1292,6 +1300,23 @@ start_nginx:
                 if ($block->stap) {
                     my ($stap_fh, $stap_fname) = tempfile("XXXXXXX", SUFFIX => '.stp', TMPDIR => 1);
                     my $stap = $block->stap;
+
+                    if ($stap =~ /\$LIBLUA_PATH\b/) {
+                        my $nginx_path = can_run($NginxBinary);
+                        #warn "nginx path: ", $nginx_path;
+                        my $line = `ldd $nginx_path|grep -E 'liblua.*?\.so'`;
+                        warn "line: $line";
+                        my $liblua_path;
+                        if ($line =~ m{\S+/liblua.*?\.so(?:\.\d+)*}) {
+                            $liblua_path = $&;
+
+                        } else {
+                            # static linking is used?
+                            $liblua_path = $nginx_path;
+                        }
+
+                        $stap =~ s/\$LIBLUA_PATH\b/$liblua_path/g;
+                    }
 
                     if ($stap =~ /\$LIBPCRE_PATH\b/) {
                         my $nginx_path = can_run($NginxBinary);
@@ -1465,6 +1490,22 @@ request:
                     $err = $!;
                     if ($err =~ /address already in use/i) {
                         warn "WARNING: failed to create the tcp listening socket: $err\n";
+                        if ($i >= 20) {
+                            my $pids = `fuser -n tcp $port`;
+                            if ($pids) {
+                                $pids =~ s/^\s+|\s+$//g;
+                                my @pids = split /\s+/, $pids;
+                                for my $pid (@pids) {
+                                    if ($pid == $$) {
+                                        warn "WARNING: Test::Nginx leaks mocked TCP sockets on port $port\n";
+                                        next;
+                                    }
+
+                                    warn "WARNING: killing process $pid listening on port $port.\n";
+                                    kill_process($pid, 1);
+                                }
+                            }
+                        }
                         sleep 1;
                         next;
                     }
@@ -1868,9 +1909,13 @@ END {
                     #warn("Failed to send quit signal to the nginx process with PID $pid");
                 }
 
-                sleep $TestNginxSleep;
+                my $max_i = 15;
+                for (my $i = 1; $i <= $max_i; $i++) {
+                    last unless is_running($pid);
 
-                if (is_running($pid)) {
+                    sleep $TestNginxSleep;
+                    next if $i < $max_i;
+
                     warn "WARNING: killing nginx $pid with force...";
                     kill(SIGKILL, $pid);
                     waitpid($pid, 0);

@@ -96,7 +96,7 @@ sub read_event_handler ($);
 sub write_event_handler ($);
 sub check_response_body ($$$$$);
 sub fmt_str ($);
-sub gen_cmd_from_req ($);
+sub gen_cmd_from_req ($$);
 sub get_linear_regression_slope ($);
 sub value_contains ($$);
 
@@ -468,7 +468,7 @@ sub run_test_helper ($$) {
         warn "$name\n";
 
         my $req = $r_req_list->[0];
-        my $cmd = gen_cmd_from_req($req);
+        my $cmd = gen_cmd_from_req($block, $req);
 
         # start a sub-process to run ab or weighttp
         my $pid = fork();
@@ -601,7 +601,13 @@ again:
                 warn "parse response\n";
             }
 
-            ( $res, $raw_headers, $left ) = parse_response( $name, $raw_resp, $head_req );
+            if (defined $block->http09) {
+                $res = HTTP::Response->new(200, "OK", [], $raw_resp);
+                $raw_headers = '';
+
+            } else {
+                ( $res, $raw_headers, $left ) = parse_response( $name, $raw_resp, $head_req );
+            }
         }
 
         if (!$n) {
@@ -823,6 +829,9 @@ sub check_response_headers($$$$$) {
                 }
                 next;
             }
+
+            $val =~ s/\$ServerPort\b/$ServerPort/g;
+            $val =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
 
             my $actual_val = $res ? $res->header($key) : undef;
             if ( !defined $actual_val ) {
@@ -1069,15 +1078,30 @@ sub check_response_body ($$$$$) {
             }
         }
 
-    }
-    elsif ( defined $block->response_body_like ) {
+    } elsif (defined $block->response_body_like
+             || defined $block->response_body_unlike)
+    {
+        my $patterns;
+        my $type;
+        my $cmp;
+        if (defined $block->response_body_like) {
+            $patterns = $block->response_body_like;
+            $type = "like";
+            $cmp = \&like;
+
+        } else {
+            $patterns = $block->response_body_unlike;
+            $type = "unlike";
+            $cmp = \&unlike;
+        }
+
         my $content = $res ? $res->content : undef;
         if ( defined $content ) {
             $content =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
             $content =~ s/^Connection: TE, close\r\n//gms;
         }
         my $expected_pat = get_indexed_value($name,
-                                             $block->response_body_like,
+                                             $patterns,
                                              $req_idx,
                                              $need_array);
         $expected_pat =~ s/\$ServerPort\b/$ServerPort/g;
@@ -1088,9 +1112,9 @@ sub check_response_body ($$$$$) {
         }
 
         SKIP: {
-            skip "$name - response_body_like - tests skipped due to the lack of directive $dry_run", 1 if $dry_run;
-            like( $content, qr/$expected_pat/s,
-                "$name - response_body_like - response is expected ($summary)"
+            skip "$name - response_body_$type - tests skipped due to the lack of directive $dry_run", 1 if $dry_run;
+            $cmp->( $content, qr/$expected_pat/s,
+                "$name - response_body_$type - response is expected ($summary)"
             );
         }
     }
@@ -1574,8 +1598,10 @@ sub read_event_handler ($) {
     return undef;
 }
 
-sub gen_cmd_from_req ($) {
-    my $req = shift;
+sub gen_cmd_from_req ($$) {
+    my ($block, $req) = @_;
+
+    my $name = $block->name;
 
     $req = join '', map { $_->{value} } @$req;
 
@@ -1585,8 +1611,12 @@ sub gen_cmd_from_req ($) {
     if ($req =~ m{^\s*(\w+)\s+(.*\S)\s*HTTP/(\S+)\r\n}gcs) {
         ($meth, $uri, $http_ver) = ($1, $2, $3);
 
+    } elsif ($req =~ m{^\s*(\w+)\s+(.*\S)\r\n}gcs) {
+        ($meth, $uri) = ($1, $2);
+        $http_ver = '0.9';
+
     } else {
-        bail_out "cannot parse the status line in the request: $req";
+        bail_out "$name - cannot parse the status line in the request: $req";
     }
 
     #warn "HTTP version: $http_ver\n";
@@ -1594,26 +1624,28 @@ sub gen_cmd_from_req ($) {
     my @opts = ('-c2', '-k', '-n100000');
 
     my $prog;
-    if ($http_ver eq '1.1' and $meth eq 'GET') {
+    if ($http_ver eq '1.1' && $meth eq 'GET') {
         $prog = 'weighttp';
 
     } else {
-        # HTTP 1.0
+        # HTTP 1.0 or HTTP 0.9
         $prog = 'ab';
         unshift @opts, '-r', '-d', '-S';
     }
 
     my @headers;
-    if ($req =~ m{\G(.*?)\r\n\r\n}gcs) {
-        my $headers = $1;
-        #warn "raw headers: $headers\n";
-        @headers = grep {
-            !/^Connection\s*:/i && !/^Host: localhost$/i
-                && !/^Content-Length\s*:/i
-        } split /\r\n/, $headers;
+    if ($http_ver ge '1.0') {
+        if ($req =~ m{\G(.*?)\r\n\r\n}gcs) {
+            my $headers = $1;
+            #warn "raw headers: $headers\n";
+            @headers = grep {
+                !/^Connection\s*:/i && !/^Host: localhost$/i
+                    && !/^Content-Length\s*:/i
+            } split /\r\n/, $headers;
 
-    } else {
-        bail_out "cannot parse the header entries in the request: $req";
+        } else {
+            bail_out "cannot parse the header entries in the request: $req";
+        }
     }
 
     #warn "headers: @headers ", scalar(@headers), "\n";
@@ -2031,6 +2063,11 @@ section. Example:
 If the test is made of multiple requests, then response_body_like B<MUST>
 be an array and each request B<MUST> match the corresponding pattern.
 
+=head2 response_body_unlike
+
+Just like `response_body_like` but this test only pass when the specified pattern
+does I<not> match the actual response body data.
+
 =head2 response_headers
 
 The headers specified in this section are in the response sent by nginx.
@@ -2249,6 +2286,27 @@ This can also be useful to tests "invalid" request lines:
 
     --- raw_request
     GET /foo HTTP/2.0 THE_FUTURE_IS_NOW
+
+=head2 http09
+
+Specifies that the HTTP 0.9 protocol is used. This affects how C<Test::Nginx::Socket>
+parses the response.
+
+Below is an example from ngx_headers_more module's test suite:
+
+    === TEST 38: HTTP 0.9 (set)
+    --- config
+        location /foo {
+            more_set_input_headers 'X-Foo: howdy';
+            echo "x-foo: $http_x_foo";
+        }
+    --- raw_request eval
+    "GET /foo\r\n"
+    --- response_headers
+    ! X-Foo
+    --- response_body
+    x-foo: 
+    --- http09
 
 =head2 ignore_response
 
