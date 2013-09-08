@@ -1,0 +1,24 @@
+# HTTPS server
+#
+server {
+  listen 443;
+  server_name tile;
+
+  include tileman_ssl_params;
+
+  location / {
+    access_by_lua '
+      local osm_tile = require "osm.tile"
+      local minz = 0
+      local maxz = 18
+      local x, y, z = osm_tile.get_cordination(ngx.var.uri, "", "png")
+      local ok = osm_tile.check_integrity_xyzm(x, y, z, minz, maxz)
+      if not ok then
+        ngx.exit(ngx.HTTP_FORBIDDEN)
+      end
+    ';
+    include tileman_proxy_params;
+    proxy_set_header X_FORWARDED_PROTO http;
+    proxy_pass http://openstreetmap_backend;
+  }
+}

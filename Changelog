@@ -1,0 +1,109 @@
+*v1.3 (2013.9.8)
+
+lua-nginx-osm
+ - based on lua-nginx-osm v0.30
+nginx/sites/tileman-*
+ - all configurations  prefixed with tileman-
+utilities
+ - utilities goes to bin/
+vagrant
+ - vagrant script is included for developers.
+
+*v1.2 (2013.7.4)
+
+lua-nginx-osm
+ -move core logics as library
+ -move to git submodule
+ -update to support background request
+ -based on lua-nginx-osm v0.30
+nginx/sites/tileserver{_ssl}
+ -fix undefind var map reference.
+ -use new request api
+updatedb
+ -handle expire.list by tirex-batch
+ -no neccesary render-expired anymore
+updatedb/bin/osm-expconv:
+ - convert expire.list to tirex-batch command
+ - tile expiration is done by tirex-batch now
+install.sh:
+ - consolidated install script
+ - move directory structure under /opt/tileman/
+others:
+ - remove lib/iniparser render-expired
+   there are not nessesary now.
+
+*v1.1 (2013.5.26)
+ 
+ Rename project as 'TileMan'
+ 
+ doc/
+   -change project name in documents
+   -add configuration diagram
+ updatedb/:
+   -organize directory structure.
+    and introduce bin/ etc/
+ lib/iniparser:
+   -now it is submodule
+ render-expired/:
+   -now it is submodule
+ 
+*v1.0 (2013.5.13)
+
+ nginx/script/tileserver.lua:
+  - performance improvement in tirex driver
+  - reduce debug message
+ nginx/script/tilecheck.lua:
+  - add detection of region inclusion of x/y/z
+ documents:
+  - update release and readme documents.
+
+*1.0 Beta5 (2013.5.7)
+
+ nginx/script/tileserver.lua:
+   - fix light thread show broker bug.
+     It won't be worked in Beta4.
+   - remove tirex debug command
+
+ nginx/sites/omsfj-tileserver:
+ nginx/script/osmfj_tilecheck.lua:
+   - introduce japan region check of x/y/z
+     it has still bug in the inclusion detection algrithm.
+     known-bug::
+       - polygon should be convex-polygon.
+       - miss-detect with concave polygon now.
+
+*1.0 Beta4 (2013.5.6)
+
+ nginx/script/tileserver.lua:
+   - introduce light thread 'tirex_handler'
+   - integrate renderd_expire into osm-updatedb script
+   - add tirex debug command
+
+*1.0 Beta3 (2013.5.1)
+
+ nginx/script/tileserver.lua:
+
+ - Refactoring 
+ 
+ - Fix udp error (#22)
+   Tirex server accept duplicate requests but get away it.
+   And return single response for request.
+   Because tileserver wait by each, some recv() fails with timeout.
+   
+   Now it sometimes show timeout error, but working well.
+
+*1.0 Beta2 (2013.4.30)
+
+ - fix MetaTile path error. that cause the tile server totaly useless.
+ - update documents
+ - fix geoip logic
+ - fix install scripts
+ - external library now goes PPA
+ - some cleanup
+ 
+*1.0 Beta1 (2013.4.10)
+
+ - first beta.
+ - works well for tile cache server.
+ - static tile replacement is also working
+ - not tested for tile server.

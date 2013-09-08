@@ -1,0 +1,8 @@
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: tileman
+Source: http://github.com/osmfj/tileman/
+
+Files: *
+Copyright: 2013 Hiroshi Miura <miurahr@osmf.jp>
+License: GPL3
+ GPL3

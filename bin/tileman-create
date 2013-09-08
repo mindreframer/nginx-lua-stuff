@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# tileman-create
+#
+# create PostGIS database for osm data
+# osmosis configuration should be in $WORKER_DIR
+#
+# Licensed in GPLv3
+# Copyright 2013, Hiroshi Miura <miurahr@osmf.jp>
+#
+# ----------------------------
+# ChnageLog
+#
+# 2013-07-17 postgres/postgis version change
+# 2013-07-02 change command name to tileman-create
+# ----------------------------
+#
+NAME=tileman-create
+CONF=tileman.conf
+# Read configuration variable file if it is present
+[ -r "/etc/${CONF}" ] && . "/etc/${CONF}"
+
+DBUSER=${DBUSER:=osm}
+DBNAME=${DBNAME:=gis}
+PSQL_BIN=${PSQL_BIN:=/usr/bin/psql}
+
+POSTGRES_VER=${POSTGRES_VER:=9.1}
+POSTGIS_VER=${POSTGIS_VER:=2.0}
+
+IAM=`whoami`
+if [ "$IAM" != "postgres" ]; then
+    echo "You must be postgres user to run this script"
+    exit 1
+fi
+
+# sudo -u postgres -i -H
+createuser -SdR $DBUSER
+createdb -E UTF8 -O $DBUSER $DBNAME
+createlang plpgsql $DBNAME
+$PSQL_BIN -d $DBNAME -f /usr/share/postgresql/${POSTGRES_VER}/contrib/postgis-${POSTGIS_VER}/postgis.sql
+$PSQL_BIN -d $DBNAME -f /usr/share/postgresql/${POSTGRES_VER}/contrib/postgis-${POSTGIS_VER}/spatial_ref_sys.sql
+
+$PSQL_BIN $DBNAME -c "ALTER TABLE geometry_columns OWNER TO $DBUSER"
+$PSQL_BIN $DBNAME -c "ALTER TABLE spatial_ref_sys OWNER TO $DBUSER"
+

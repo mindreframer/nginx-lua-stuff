@@ -1,0 +1,12 @@
+proxy_headers_hash_max_size 1024;
+proxy_headers_hash_bucket_size 128;
+
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X_FORWARDED_PROTO http;
+proxy_set_header Host $http_host;
+proxy_cache       tilecache;
+proxy_cache_key "$scheme$host$request_uri";
+proxy_cache_valid  200 302  5d;
+proxy_cache_valid  404      1m;
+proxy_redirect off;
+

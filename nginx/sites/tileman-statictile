@@ -1,0 +1,25 @@
+server {
+  listen 80;
+  server_name static;
+  root   /var/www;
+
+  location / {
+    access_by_lua '
+      local osm_tile = require "osm.tile"
+      local minz = 0
+      local maxz = 18
+      local x, y, z = osm_tile.get_cordination(ngx.var.uri, "", "png")
+      local ok = osm_tile.check_integrity_xyzm(x, y, z, minz, maxz)
+      if not ok then
+        ngx.exit(ngx.HTTP_FORBIDDEN)
+      end
+    ';
+    root /opt/tileman/tiles/;
+    try_files $uri $uri/ @tilecache;
+  }
+
+  location @tilecache {
+    include tileman_proxy_params;
+    proxy_pass http://openstreetmap_backend;
+  }
+}

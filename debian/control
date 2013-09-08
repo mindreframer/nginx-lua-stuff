@@ -1,0 +1,19 @@
+Source: tileman
+Section: utils
+Priority: extra
+Maintainer: Hiroshi Miura <miurahr@linux.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://osmfj.github.io/tileman/
+#Vcs-Git: git://git.debian.org/collab-maint/tileman.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/tileman.git;a=summary
+
+Package: tileman
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, nginx-extras (>=1.4.1),
+         lua-nginx-osm, tirex-core, postgresql-9.1-postgis, geoip-database,
+         osm2pgsql
+Suggests: osmosis
+Description: A collection of configuraition and tools for tileserving
+ TileMan is a collection of Nginx configuration, nginx/lua library and 
+ postgis/osm planet utilities.
