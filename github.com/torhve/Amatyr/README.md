@@ -49,6 +49,8 @@ And follow Openresty's own installation docs.
 1. Configure postgresql
 1. Configure the virtual host for nginx like this:
 
+    lua_package_path '/home/yr/amatyr/?.lua;;';
+
     server {
         listen	*:80;
         server_name  yr.no;
@@ -61,6 +63,9 @@ And follow Openresty's own installation docs.
         location /api {
            lua_code_cache off;
            content_by_lua_file $root/pgrouter.lua;
+        }
+        location /static {
+            root $root;
         }
 
         location / { try_files $uri @lua; }
