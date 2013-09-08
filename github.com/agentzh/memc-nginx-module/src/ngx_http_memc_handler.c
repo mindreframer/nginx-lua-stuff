@@ -3,16 +3,20 @@
 #endif
 #include "ddebug.h"
 
+
 #include "ngx_http_memc_handler.h"
 #include "ngx_http_memc_module.h"
 #include "ngx_http_memc_request.h"
 #include "ngx_http_memc_response.h"
 #include "ngx_http_memc_util.h"
 
+
 static ngx_int_t ngx_http_memc_flags_as_http_time_variable(
-        ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
+    ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
+
 
 static ngx_http_variable_t ngx_http_memc_variables[] = {
+
     { ngx_string("memc_flags_as_http_time"), NULL,
       ngx_http_memc_flags_as_http_time_variable, 0,
       0, 0 },
@@ -20,9 +24,6 @@ static ngx_http_variable_t ngx_http_memc_variables[] = {
     { ngx_null_string, NULL, NULL, 0, 0, 0 }
 };
 
-static ngx_int_t ngx_http_memc_add_more_variables(ngx_conf_t *cf);
-
-static ngx_flag_t  ngx_http_memc_enabled = 0;
 
 static ngx_str_t  ngx_http_memc_key = ngx_string("memc_key");
 static ngx_str_t  ngx_http_memc_cmd = ngx_string("memc_cmd");
@@ -30,27 +31,18 @@ static ngx_str_t  ngx_http_memc_value = ngx_string("memc_value");
 static ngx_str_t  ngx_http_memc_flags = ngx_string("memc_flags");
 static ngx_str_t  ngx_http_memc_exptime = ngx_string("memc_exptime");
 
-static ngx_int_t  ngx_http_memc_key_index;
-static ngx_int_t  ngx_http_memc_cmd_index;
-static ngx_int_t  ngx_http_memc_value_index;
-static ngx_int_t  ngx_http_memc_flags_index;
-static ngx_int_t  ngx_http_memc_exptime_index;
 
+static ngx_int_t ngx_http_memc_add_more_variables(ngx_conf_t *cf);
 static ngx_int_t ngx_http_memc_variable_not_found(ngx_http_request_t *r,
         ngx_http_variable_value_t *v, uintptr_t data);
-
 static ngx_int_t ngx_http_memc_add_variable(ngx_conf_t *cf, ngx_str_t *name);
-
 static ngx_flag_t ngx_http_memc_in_cmds_allowed(ngx_http_memc_loc_conf_t *mlcf,
         ngx_http_memc_cmd_t memc_cmd);
-
 static ngx_int_t ngx_http_memc_reinit_request(ngx_http_request_t *r);
 static void ngx_http_memc_abort_request(ngx_http_request_t *r);
 static void ngx_http_memc_finalize_request(ngx_http_request_t *r,
     ngx_int_t rc);
-
 static ngx_flag_t ngx_http_memc_valid_uint32_str(u_char *data, size_t len);
-
 static ngx_flag_t ngx_http_memc_valid_uint64_str(u_char *data, size_t len);
 
 
@@ -61,6 +53,7 @@ ngx_http_memc_handler(ngx_http_request_t *r)
     ngx_http_upstream_t            *u;
     ngx_http_memc_ctx_t            *ctx;
     ngx_http_memc_loc_conf_t       *mlcf;
+    ngx_http_memc_main_conf_t      *mmcf;
     ngx_str_t                       target;
     ngx_url_t                       url;
 
@@ -75,14 +68,14 @@ ngx_http_memc_handler(ngx_http_request_t *r)
 
     dd("memc handler");
 
-    key_vv = ngx_http_get_indexed_variable(r, ngx_http_memc_key_index);
+    mmcf = ngx_http_get_module_main_conf(r, ngx_http_memc_module);
 
+    key_vv = ngx_http_get_indexed_variable(r, mmcf->key_index);
     if (key_vv == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    cmd_vv = ngx_http_get_indexed_variable(r, ngx_http_memc_cmd_index);
-
+    cmd_vv = ngx_http_get_indexed_variable(r, mmcf->cmd_index);
     if (cmd_vv == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
@@ -116,21 +109,21 @@ ngx_http_memc_handler(ngx_http_request_t *r)
             memc_cmd = ngx_http_memc_cmd_delete;
 
         } else {
-            ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-             "ngx_memc: $memc_cmd variable requires explicit "
-             "assignment for HTTP request method %V",
-             &r->method_name);
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "ngx_memc: $memc_cmd variable not found for HTTP "
+                          "%V requests", &r->method_name);
 
             return NGX_HTTP_BAD_REQUEST;
         }
+
     } else {
+
         memc_cmd = ngx_http_memc_parse_cmd(cmd_vv->data, cmd_vv->len,
-                &is_storage_cmd);
+                                           &is_storage_cmd);
 
         if (memc_cmd == ngx_http_memc_cmd_unknown) {
-            ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-                     "ngx_memc: unknown $memc_cmd \"%v\"", cmd_vv);
-
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "ngx_memc: unknown $memc_cmd \"%v\"", cmd_vv);
             return NGX_HTTP_BAD_REQUEST;
         }
     }
@@ -139,10 +132,10 @@ ngx_http_memc_handler(ngx_http_request_t *r)
 
     dd("XXX connect timeout %d", (int) mlcf->upstream.connect_timeout);
 
-    if ( ! ngx_http_memc_in_cmds_allowed(mlcf, memc_cmd) ) {
-        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-                 "ngx_memc: User requests to run memcached command "
-                 "\"%v\"", cmd_vv);
+    if (!ngx_http_memc_in_cmds_allowed(mlcf, memc_cmd)) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "ngx_memc: memcached command \"%v\" not allowed",
+                      cmd_vv);
 
         return NGX_HTTP_FORBIDDEN;
     }
@@ -181,7 +174,7 @@ ngx_http_memc_handler(ngx_http_request_t *r)
     if (mlcf->complex_target) {
         /* variables used in the memc_pass directive */
         if (ngx_http_complex_value(r, mlcf->complex_target, &target)
-                != NGX_OK)
+            != NGX_OK)
         {
             dd("failed to compile");
             return NGX_ERROR;
@@ -189,7 +182,7 @@ ngx_http_memc_handler(ngx_http_request_t *r)
 
         if (target.len == 0) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "memc: handler: empty \"memc_pass\" target");
+                          "memc: handler: empty \"memc_pass\" target");
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
@@ -201,8 +194,7 @@ ngx_http_memc_handler(ngx_http_request_t *r)
 
         if (mlcf->upstream.upstream == NULL) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                   "memc: upstream \"%V\" not found", &target);
-
+                          "memc: upstream \"%V\" not found", &target);
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
     }
@@ -301,8 +293,7 @@ ngx_http_memc_handler(ngx_http_request_t *r)
             || memc_cmd == ngx_http_memc_cmd_flush_all
             || memc_cmd == ngx_http_memc_cmd_delete)
     {
-        exptime_vv = ngx_http_get_indexed_variable(r,
-                ngx_http_memc_exptime_index);
+        exptime_vv = ngx_http_get_indexed_variable(r, mmcf->exptime_index);
 
         if (exptime_vv == NULL) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -310,56 +301,54 @@ ngx_http_memc_handler(ngx_http_request_t *r)
 
         ctx->memc_exptime_vv = exptime_vv;
 
-        if ( ! exptime_vv->not_found
-                && exptime_vv->len
-                && ! ngx_http_memc_valid_uint32_str(
-                    exptime_vv->data, exptime_vv->len))
+        if (!exptime_vv->not_found
+            && exptime_vv->len
+            && !ngx_http_memc_valid_uint32_str(exptime_vv->data,
+                                               exptime_vv->len))
         {
             return NGX_HTTP_BAD_REQUEST;
         }
     }
 
     if (is_storage_cmd || memc_cmd == ngx_http_memc_cmd_get) {
-        flags_vv = ngx_http_get_indexed_variable(r, ngx_http_memc_flags_index);
-
+        flags_vv = ngx_http_get_indexed_variable(r, mmcf->flags_index);
         if (flags_vv == NULL) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
         ctx->memc_flags_vv = flags_vv;
 
-        if ( is_storage_cmd
-                && ! flags_vv->not_found
-                && flags_vv->len
-                && ! ngx_http_memc_valid_uint32_str(
-                    flags_vv->data, flags_vv->len))
+        if (is_storage_cmd
+            && !flags_vv->not_found
+            && flags_vv->len
+            && !ngx_http_memc_valid_uint32_str(flags_vv->data, flags_vv->len))
         {
             return NGX_HTTP_BAD_REQUEST;
         }
     }
 
-    if (is_storage_cmd || memc_cmd == ngx_http_memc_cmd_incr
-                || memc_cmd == ngx_http_memc_cmd_decr)
+    if (is_storage_cmd
+        || memc_cmd == ngx_http_memc_cmd_incr
+        || memc_cmd == ngx_http_memc_cmd_decr)
     {
-        value_vv = ngx_http_get_indexed_variable(r,
-                ngx_http_memc_value_index);
+        value_vv = ngx_http_get_indexed_variable(r, mmcf->value_index);
         if (value_vv == NULL) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
         if (memc_cmd == ngx_http_memc_cmd_incr
-                || memc_cmd == ngx_http_memc_cmd_decr)
+            || memc_cmd == ngx_http_memc_cmd_decr)
         {
             if (value_vv->not_found || value_vv->len == 0) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "The \"$memc_value\" variable is required for "
-                          "command \"%V\"", &ctx->cmd_str);
+                              "the \"$memc_value\" variable is required for "
+                              "command \"%V\"", &ctx->cmd_str);
 
                 return NGX_HTTP_BAD_REQUEST;
             }
 
-            if (!ngx_http_memc_valid_uint64_str(
-                    value_vv->data, value_vv->len))
+            if (!ngx_http_memc_valid_uint64_str(value_vv->data,
+                                                value_vv->len))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -405,7 +394,7 @@ ngx_http_memc_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 
 static ngx_flag_t
 ngx_http_memc_in_cmds_allowed(ngx_http_memc_loc_conf_t *mlcf,
-        ngx_http_memc_cmd_t memc_cmd)
+    ngx_http_memc_cmd_t memc_cmd)
 {
     ngx_uint_t                   i;
     ngx_http_memc_cmd_t         *value;
@@ -466,40 +455,41 @@ ngx_http_memc_valid_uint64_str(u_char *data, size_t len)
     return 1;
 }
 
+
 ngx_int_t
 ngx_http_memc_init(ngx_conf_t *cf)
 {
-    if (!ngx_http_memc_enabled) {
+    ngx_http_memc_main_conf_t       *mmcf;
+
+    mmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_memc_module);
+
+    if (!mmcf->module_used) {
         return NGX_OK;
     }
 
-    if ((ngx_http_memc_key_index = ngx_http_memc_add_variable(
-                cf, &ngx_http_memc_key)) == NGX_ERROR)
-    {
+    mmcf->key_index = ngx_http_memc_add_variable(cf, &ngx_http_memc_key);
+    if (mmcf->key_index == NGX_ERROR) {
         return NGX_ERROR;
     }
 
-    if ((ngx_http_memc_cmd_index = ngx_http_memc_add_variable(
-                cf, &ngx_http_memc_cmd)) == NGX_ERROR)
-    {
+    mmcf->cmd_index = ngx_http_memc_add_variable(cf, &ngx_http_memc_cmd);
+    if (mmcf->cmd_index == NGX_ERROR) {
         return NGX_ERROR;
     }
 
-    if ((ngx_http_memc_flags_index = ngx_http_memc_add_variable(
-                cf, &ngx_http_memc_flags)) == NGX_ERROR)
-    {
+    mmcf->flags_index = ngx_http_memc_add_variable(cf, &ngx_http_memc_flags);
+    if (mmcf->flags_index == NGX_ERROR) {
         return NGX_ERROR;
     }
 
-    if ((ngx_http_memc_exptime_index = ngx_http_memc_add_variable(
-                cf, &ngx_http_memc_exptime)) == NGX_ERROR)
-    {
+    mmcf->exptime_index = ngx_http_memc_add_variable(cf,
+                                                     &ngx_http_memc_exptime);
+    if (mmcf->exptime_index == NGX_ERROR) {
         return NGX_ERROR;
     }
 
-    if ((ngx_http_memc_value_index = ngx_http_memc_add_variable(
-                cf, &ngx_http_memc_value)) == NGX_ERROR)
-    {
+    mmcf->value_index = ngx_http_memc_add_variable(cf, &ngx_http_memc_value);
+    if (mmcf->value_index == NGX_ERROR) {
         return NGX_ERROR;
     }
 
@@ -508,7 +498,8 @@ ngx_http_memc_init(ngx_conf_t *cf)
 
 
 static ngx_int_t
-ngx_http_memc_add_variable(ngx_conf_t *cf, ngx_str_t *name) {
+ngx_http_memc_add_variable(ngx_conf_t *cf, ngx_str_t *name)
+{
     ngx_http_variable_t         *v;
 
     v = ngx_http_add_variable(cf, name, NGX_HTTP_VAR_CHANGEABLE);
@@ -517,20 +508,13 @@ ngx_http_memc_add_variable(ngx_conf_t *cf, ngx_str_t *name) {
     }
 
     v->get_handler = ngx_http_memc_variable_not_found;
-
     return ngx_http_get_variable_index(cf, name);
-}
-
-
-void
-ngx_http_memc_set_module_enabled() {
-    ngx_http_memc_enabled = 1;
 }
 
 
 static ngx_int_t
 ngx_http_memc_variable_not_found(ngx_http_request_t *r,
-        ngx_http_variable_value_t *v, uintptr_t data)
+    ngx_http_variable_value_t *v, uintptr_t data)
 {
     v->not_found = 1;
     return NGX_OK;
@@ -538,7 +522,8 @@ ngx_http_memc_variable_not_found(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_memc_add_more_variables(ngx_conf_t *cf) {
+ngx_http_memc_add_more_variables(ngx_conf_t *cf)
+{
     ngx_http_variable_t *var, *v;
     for (v = ngx_http_memc_variables; v->name.len; v++) {
         var = ngx_http_add_variable(cf, &v->name, v->flags);
@@ -554,8 +539,7 @@ ngx_http_memc_add_more_variables(ngx_conf_t *cf) {
 
 static ngx_int_t
 ngx_http_memc_flags_as_http_time_variable(
-        ngx_http_request_t *r, ngx_http_variable_value_t *v,
-        uintptr_t data)
+    ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     u_char                      *p;
     size_t                       len;
@@ -607,4 +591,3 @@ not_found:
 
     return NGX_OK;
 }
-
