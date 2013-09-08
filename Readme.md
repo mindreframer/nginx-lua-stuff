@@ -192,6 +192,10 @@ Examples for OpenResty:
       Nginx as reverse proxy using redis as cache engine
        44 commits, last change: 2012-03-21 16:49:42, 23 stars, 2 forks
 
+    devkato/nginx-bandit-lua:
+      this is sample program to use bandit algorithm with nginx + lua
+       3 commits, last change: 2013-06-27 21:08:34, 1 stars, 0 forks
+
     garethr/nginx-json-proxy:
       An experiment with openresty, lua and nginx
        2 commits, last change: 2013-07-02 12:26:41, 1 stars, 1 forks
