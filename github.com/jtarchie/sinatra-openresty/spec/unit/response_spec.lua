@@ -7,11 +7,11 @@ ngx = {}
 describe("Response", function()
   before_each(function()
     ngx = {
-      say=function()end,
+      print=function()end,
       header={},
       status=nil,
-      req={
-        get_method=function() end
+      var={
+        request_method=nil
       }
     }
   end)
@@ -23,23 +23,23 @@ describe("Response", function()
     assert.same(response.body, " ")
   end)
 
-  describe("when sending response back", function()
+  describe("when finishing response back", function()
     it("outputs the body", function()
-      local say = spy.on(ngx, "say")
-      local response = Response:new(200, "1234")
-      response:send()
+      local say = spy.on(ngx, "print")
+      local response = Response:new({200, "1234"})
+      response:finish()
       assert.spy(say).was_called_with("1234")
     end)
 
     it("outputs the headers", function()
-      local response = Response:new(200, {["Content-Type"]="text/plain"}, " ")
-      response:send()
+      local response = Response:new({200, {["Content-Type"]="text/plain"}, " "})
+      response:finish()
       assert.same(ngx.header, {["Content-Type"]="text/plain"})
     end)
 
     it("sets the status code", function()
       local response = Response:new(500)
-      response:send()
+      response:finish()
       assert.same(ngx.status, 500)
     end)
   end)
@@ -48,16 +48,16 @@ describe("Response", function()
     local status = 500
     local headers = {["Content-Type"]="application/json"}
     local body = "body"
-    
+
     it("can be an array of three elements for status, headers, and body", function()
-      local response = Response:new(status, headers, body)
+      local response = Response:new({status, headers, body})
       assert.same(response.status, status)
       assert.same(response.headers, headers)
       assert.same(response.body, body)
     end)
 
     it("can be an array of two elements for status and body", function()
-      local response = Response:new(status, body)
+      local response = Response:new({status, body})
       assert.same(response.status, status)
       assert.same(response.headers, {})
       assert.same(response.body, body)

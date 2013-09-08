@@ -1,18 +1,30 @@
 # Introduction
 
-I started porting the Sinatra framework using Lua on top of Openresty.
-Currently using capybara-webkit with Ruby to test as I have not come up
-with a good pattern to mock nginx through Lua. Trying to abstract
-Request and Response, so most of the app can be tested against using
-MockRequest and MockResponse objects.
+I'm a fan of the Ruby library [Sinatra](http://sinatrarb.com). It provides a great DSL to map HTTP requests to build APIs, websites, or just simple wrappers around already working code.
+
+
+# Getting Started
+
+```sh
+git clone https://github.com/jtarchie/sinatra-openresty.git
+cd sinatra-openresty
+```
+
+Take a look at the example application under `examples/app.lua`.
+
+# TODO
+* look into using standard request and response objects ([WSAPI](https://github.com/keplerproject/wsapi) or [Rack](https://github.com/pintsized/lua-resty-rack))
+* Provide example application that uses JSON and database
+* Optimize route callback (should I be using coroutines or pcall)
+* Write documentation for supported functionality
+
 
 # Test
 
-Assuming that you already have OpenResty installed and available via
-PATH.
+Assuming that you already have OpenResty installed, `nginx` is available via
+PATH, and you've added [moonrocks](http://rocks.moonscript.org/about).
 
 ```sh
-bundle
-pkill nginx; nginx -p `pwd`/examples/ -c nginx.conf; bundle exec rspec spec/
-busted -p spec.lua
+luarocks install sinatra-dev-1.rockspec
+busted 
 ```
