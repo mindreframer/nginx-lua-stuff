@@ -255,4 +255,8 @@ Examples for OpenResty:
     xinqiyang/yagamiko:
       yagamiko is a api server project implementation by lua  nginx ( openresty) .
        7 commits, last change: 2013-06-17 06:38:44, 2 stars, 0 forks
+
+    yo2oneoo/lua-resty-httpclient:
+      Nonblocking Lua HTTP Client library for aLiLua  ngx_lua
+       4 commits, last change: 2013-08-18 07:50:30, 3 stars, 0 forks
 <!-- PROJECTS_LIST_END -->
