@@ -5,10 +5,8 @@ homepage "http://openresty.org"
 
 replaces        "nginx"
 install_path    "/opt/nginx"
-#build_version   Omnibus::BuildVersion.new.semver
 build_version   '1.2.8'
-#build_version   '1.2.7'
-build_iteration 1
+build_iteration 2
 
 # creates required build directories
 dependency "preparation"

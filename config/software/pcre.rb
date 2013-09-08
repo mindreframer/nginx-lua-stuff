@@ -21,7 +21,7 @@ version "8.32"
 dependency "libedit"
 dependency "ncurses"
 
-source :url => "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.32.tar.gz",
+source :url => "http://iweb.dl.sourceforge.net/project/pcre/pcre/8.32/pcre-8.32.tar.gz",
        :md5 => "234792d19a6c3c34a13ff25df82c1ce7"
 
 relative_path "pcre-8.32"
