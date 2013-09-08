@@ -1,0 +1,4 @@
+version=3
+opts="versionmangle=s/.*v(.*)/$1/" \
+    http://githubredir.debian.net/github/miurahr/lua-nginx-osm/(.*).tar.gz
+
