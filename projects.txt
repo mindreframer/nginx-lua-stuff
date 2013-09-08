@@ -32,6 +32,7 @@ https://github.com/desbouis/nginx-redis-proxy.git
 https://github.com/garethr/nginx-json-proxy.git
 https://github.com/jtarchie/sinatra-openresty.git
 https://github.com/leafo/moonrocks-site.git
+https://github.com/liseen/lua-resty-http.git
 https://github.com/medcl/lua-resty-weedfs.git
 https://github.com/mindreframer/github-auth-nginx.git
 https://github.com/observing/balancerbattle.git
@@ -41,10 +42,8 @@ https://github.com/samalba/hipache-nginx.git
 https://github.com/seandong/ad-analytics.git
 https://github.com/solso/api-aggregator.git
 https://github.com/thattommyhall/nginx-lua-examples.git
-https://github.com/thattommyhall/nginx-lua-examples.git
 https://github.com/torhve/Amatyr.git
 https://github.com/torhve/LuaWeb.git
 https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
-https://github.com/liseen/lua-resty-http.git
