@@ -2,7 +2,7 @@ local table = table
 local Pattern, Utils = {}, require("sinatra/utils")
 Pattern.__index = Pattern
 
-function compile_pattern(pattern)
+local function compile_pattern(pattern)
   local keys = {}
   local compiled_pattern = pattern:gsub("[^%w%?\\/:*]", function(c)
     return Utils.escape(c):gsub('%%(%x)(%x)', function(a,b)
