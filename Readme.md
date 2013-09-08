@@ -240,6 +240,10 @@ Examples for OpenResty:
       A Lua module for OpenResty, providing scriptable HTTP cache (edge) functionality for Nginx.
        495 commits, last change: 2013-08-30 06:41:09, 52 stars, 7 forks
 
+    rebill/nginx-lua-in-action:
+      Nginx Lua in Action
+       12 commits, last change: 2013-09-05 03:57:26, 0 stars, 0 forks
+
     samalba/hipache-nginx:
       Dynamic HTTP routing with Nginx and Redis (reimplements Hipache with Nginx using the Lua module)
        8 commits, last change: 2013-07-19 08:42:51, 68 stars, 11 forks
