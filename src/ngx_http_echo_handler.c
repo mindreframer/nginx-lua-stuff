@@ -18,23 +18,6 @@
 #include <nginx.h>
 #include <ngx_log.h>
 
-ngx_int_t
-ngx_http_echo_handler_init(ngx_conf_t *cf)
-{
-    ngx_int_t         rc;
-
-#if 1
-    ngx_http_echo_filter_used = 0;
-#endif
-
-    rc = ngx_http_echo_echo_init(cf);
-    if (rc != NGX_OK) {
-        return rc;
-    }
-
-    return ngx_http_echo_add_variables(cf);
-}
-
 
 void
 ngx_http_echo_wev_handler(ngx_http_request_t *r)
@@ -54,7 +37,9 @@ ngx_http_echo_wev_handler(ngx_http_request_t *r)
     dd("waiting: %d, done: %d", (int) ctx->waiting, (int) ctx->done);
 
     if (ctx->waiting && ! ctx->done) {
+
         if (r == r->connection->data && r->postponed) {
+
             if (r->postponed->request) {
                 r->connection->data = r->postponed->request;
 
@@ -87,8 +72,8 @@ ngx_http_echo_wev_handler(ngx_http_request_t *r)
 
     if (rc == NGX_AGAIN) {
         dd("mark busy %d for %.*s", (int) ctx->next_handler_cmd,
-                (int) r->uri.len,
-                r->uri.data);
+           (int) r->uri.len,
+           r->uri.data);
 
         ctx->waiting = 1;
         ctx->done = 0;
@@ -125,10 +110,16 @@ ngx_http_echo_handler(ngx_http_request_t *r)
     }
 
     if (rc == NGX_ERROR) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+        return rc;
     }
 
+    ctx = ngx_http_get_module_ctx(r, ngx_http_echo_module);
+
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        if (ctx && ctx->headers_sent) {
+            return NGX_ERROR;
+        }
+
         return rc;
     }
 
@@ -141,11 +132,10 @@ ngx_http_echo_handler(ngx_http_request_t *r)
     dd("%d", r->connection->destroyed);
     dd("%d", r->done);
 
-    ctx = ngx_http_get_module_ctx(r, ngx_http_echo_module);
     if (ctx) {
         dd("mark busy %d for %.*s", (int) ctx->next_handler_cmd,
-                (int) r->uri.len,
-                r->uri.data);
+           (int) r->uri.len,
+           r->uri.data);
 
         ctx->waiting = 1;
         ctx->done = 0;
@@ -196,7 +186,7 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
         /* evaluate arguments for the current cmd (if any) */
         if (cmd->args) {
             computed_args = ngx_array_create(r->pool, cmd->args->nelts,
-                    sizeof(ngx_str_t));
+                                             sizeof(ngx_str_t));
 
             if (computed_args == NULL) {
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -211,8 +201,8 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
             rc = ngx_http_echo_eval_cmd_args(r, cmd, computed_args, opts);
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                        "Failed to evaluate arguments for "
-                        "the directive.");
+                              "Failed to evaluate arguments for "
+                              "the directive.");
                 return rc;
             }
         }
@@ -228,7 +218,7 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
              * function */
             dd("found echo opcode");
             rc = ngx_http_echo_exec_echo(r, ctx, computed_args,
-                    0 /* in filter */, opts);
+                                         0 /* in filter */, opts);
             break;
 
         case echo_opcode_echo_request_body:
@@ -236,21 +226,53 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
             break;
 
         case echo_opcode_echo_location_async:
+            if (!r->request_body) {
+                /* we require reading the request body before doing
+                 * subrequests */
+
+                ctx->next_handler_cmd--; /* re-run the current cmd */
+                goto read_request_body;
+            }
+
             dd("found opcode echo location async...");
             rc = ngx_http_echo_exec_echo_location_async(r, ctx,
-                    computed_args);
+                                                        computed_args);
             break;
 
         case echo_opcode_echo_location:
+            if (!r->request_body) {
+                /* we require reading the request body before doing
+                 * subrequests */
+
+                ctx->next_handler_cmd--; /* re-run the current cmd */
+                goto read_request_body;
+            }
+
             return ngx_http_echo_exec_echo_location(r, ctx, computed_args);
 
         case echo_opcode_echo_subrequest_async:
+            if (!r->request_body) {
+                /* we require reading the request body before doing
+                 * subrequests */
+
+                ctx->next_handler_cmd--; /* re-run the current cmd */
+                goto read_request_body;
+            }
+
             dd("found opcode echo subrequest async...");
             rc = ngx_http_echo_exec_echo_subrequest_async(r, ctx,
-                    computed_args);
+                                                          computed_args);
             break;
 
         case echo_opcode_echo_subrequest:
+            if (!r->request_body) {
+                /* we require reading the request body before doing
+                 * subrequests */
+
+                ctx->next_handler_cmd--; /* re-run the current cmd */
+                goto read_request_body;
+            }
+
             return ngx_http_echo_exec_echo_subrequest(r, ctx, computed_args);
 
         case echo_opcode_echo_sleep:
@@ -262,7 +284,7 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
 
         case echo_opcode_echo_blocking_sleep:
             rc = ngx_http_echo_exec_echo_blocking_sleep(r, ctx,
-                    computed_args);
+                                                        computed_args);
             break;
 
         case echo_opcode_echo_reset_timer:
@@ -274,6 +296,8 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
             break;
 
         case echo_opcode_echo_read_request_body:
+
+read_request_body:
             ctx->wait_read_request_body = 0;
 
             rc = ngx_http_echo_exec_echo_read_request_body(r, ctx);
@@ -310,7 +334,7 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
 
         default:
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "Unknown opcode: %d", cmd->opcode);
+                          "unknown opcode: %d", cmd->opcode);
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
             break;
         }
@@ -326,13 +350,19 @@ ngx_http_echo_run_cmds(ngx_http_request_t *r)
         return rc;
     }
 
+    if (!r->request_body) {
+        if (ngx_http_discard_request_body(r) != NGX_OK) {
+            return NGX_ERROR;
+        }
+    }
+
     return NGX_OK;
 }
 
 
 ngx_int_t
 ngx_http_echo_post_subrequest(ngx_http_request_t *r,
-        void *data, ngx_int_t rc)
+    void *data, ngx_int_t rc)
 {
     ngx_http_echo_ctx_t         *ctx = data;
     ngx_http_request_t          *pr;
@@ -342,13 +372,13 @@ ngx_http_echo_post_subrequest(ngx_http_request_t *r,
 
     if (ctx->run_post_subrequest) {
         dd("already run post_subrequest: %p: %.*s", ctx,
-                (int) r->uri.len, r->uri.data);
+           (int) r->uri.len, r->uri.data);
 
         return rc;
     }
 
     dd("setting run_post_subrequest to 1 for %p for %.*s", ctx,
-            (int) r->uri.len, r->uri.data);
+       (int) r->uri.len, r->uri.data);
 
     ctx->run_post_subrequest = 1;
 
@@ -368,9 +398,10 @@ ngx_http_echo_post_subrequest(ngx_http_request_t *r,
 
     /* work-around issues in nginx's event module */
 
-    if (r != r->connection->data && r->postponed &&
-            (r->main->posted_requests == NULL ||
-            r->main->posted_requests->request != pr))
+    if (r != r->connection->data
+        && r->postponed
+        && (r->main->posted_requests == NULL
+            || r->main->posted_requests->request != pr))
     {
 #if defined(nginx_version) && nginx_version >= 8012
         ngx_http_post_request(pr, NULL);
@@ -381,4 +412,3 @@ ngx_http_echo_post_subrequest(ngx_http_request_t *r,
 
     return rc;
 }
-
