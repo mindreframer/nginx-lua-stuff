@@ -31,6 +31,7 @@ https://github.com/chaoslawful/lua-nginx-module.git
 https://github.com/cloudaice/redis-restful.git
 https://github.com/cloudflare/lua-nginx-cache-module.git
 https://github.com/desbouis/nginx-redis-proxy.git
+https://github.com/devkato/nginx-bandit-lua.git
 https://github.com/garethr/nginx-json-proxy.git
 https://github.com/jtarchie/sinatra-openresty.git
 https://github.com/leafo/moonrocks-site.git
@@ -52,4 +53,3 @@ https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
-https://github.com/devkato/nginx-bandit-lua.git
