@@ -27,7 +27,7 @@ end
 
 local function dbreq(sql)
     local db = pg:new()
-    db:set_timeout(3000)
+    db:set_timeout(30000)
     local ok, err = db:connect(
         {
             host=conf.db.host,
@@ -40,7 +40,7 @@ local function dbreq(sql)
     if not ok then
         ngx.say(err)
     end
-    ---ngx.log(ngx.ERR, '___ SQL ___'..sql)
+    --ngx.log(ngx.ERR, '___ SQL ___'..sql)
     local res, err = db:query(sql)
     db:set_keepalive(0,10)
     return cjson.encode(res)
@@ -67,7 +67,14 @@ function max(match)
     local keytest = ngx.re.match(key, '[a-z]+', 'oj')
     if not keytest then ngx.exit(403) end
 
-    local sql = "SELECT date_trunc('day', datetime) AS datetime, MAX("..key..") AS "..key.." FROM "..conf.db.table.." WHERE date_part('year', datetime) < 2013 GROUP BY 1"
+    local sql = [[
+		SELECT 
+			date_trunc('day', datetime) AS datetime,
+			MAX(]]..key..[[) AS ]]..key..[[
+		FROM ]]..conf.db.table..[[
+		WHERE date_part('year', datetime) < 2013 
+		GROUP BY 1
+	]]
     
     return dbreq(sql)
 end
@@ -102,7 +109,7 @@ local function getDateConstrains(startarg, interval)
     local andwhere = ''
     if startarg then 
         local start
-        local endpart = "365 days"
+        local endpart = "1 year"
         if string.upper(startarg) == 'TODAY' then
             start = "CURRENT_DATE" 
             endpart = "1 DAY"
@@ -124,8 +131,11 @@ local function getDateConstrains(startarg, interval)
             start = "CURRENT_DATE - INTERVAL '1 MONTH'"
             endpart = "1 MONTH"
         elseif string.upper(startarg) == 'YEAR' then
-            start = "DATE '" .. startarg .. "-01-01'"
-            endpart = "365 days"
+            start = "date_trunc('year', current_timestamp)"
+            endpart = "1 year"
+        elseif string.upper(startarg) == 'ALL' then
+            start = "DATE '1900-01-01'" -- Should be old enough :-)
+            endpart = "200 years"
         else
             start = "DATE '" .. startarg .. "'"
         end
@@ -160,7 +170,7 @@ function record(match)
         -- Not valid with any other value than max
         sql = [[
         SELECT 
-        distinct date_trunc('day', datetime) AS datetime, 
+        DISTINCT date_trunc('day', datetime) AS datetime, 
         SUM(rain) OVER (PARTITION BY date_trunc('day', datetime)) AS dayrain 
         FROM ]]..conf.db.table..[[
         ]]..where..[[
@@ -179,6 +189,7 @@ function record(match)
         sql = [[
         SELECT
             datetime, 
+			date_trunc('second', age(NOW(), date_trunc('second', datetime))) AS age,
             ]]..key..[[
         FROM ]]..conf.db.table..[[ 
         WHERE
@@ -262,7 +273,7 @@ function year(match)
     local syear = year .. '-01-01'
     local where = [[
         WHERE datetime BETWEEN DATE ']]..syear..[['
-        AND DATE ']]..syear..[[' + INTERVAL '365 days'
+        AND DATE ']]..syear..[[' + INTERVAL '1 year'
     ]]
     local json = dbreq([[
         SELECT 
