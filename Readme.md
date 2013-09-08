@@ -80,6 +80,10 @@ Examples for OpenResty:
       Set, add, and clear arbitrary output headers
        168 commits, last change: 2013-08-06 16:24:15, 162 stars, 20 forks
 
+    agentzh/lua-resty-core:
+      New FFI-based API for lua-nginx-module
+       42 commits, last change: 2013-09-01 22:23:21, 17 stars, 2 forks
+
     agentzh/lua-resty-memcached:
       Lua memcached client driver for the ngx_lua based on the cosocket API
        106 commits, last change: 2013-04-11 11:31:00, 39 stars, 10 forks
