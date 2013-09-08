@@ -507,7 +507,7 @@ See also `ngx-sample-lua-bt`.
 ngx-lua-bt
 ----------
 
-This tool dump out the current Lua-land backtrace in the current running Nginx worker process.
+This tool dumps out the current Lua-land backtrace in the current running Nginx worker process.
 
 This tool is very useful in locating the infinite Lua loop that keeps the Nginx worker
 spinning with 100% CPU usage.
@@ -1068,6 +1068,92 @@ Here's a sample command:
 
     For total 5 connection pool(s) found.
     324 microseconds elapsed in the probe handler.
+
+check-debug-info
+----------------
+
+This tool checks which executable files do not contain debug info in any running process that you specify.
+
+Basically, just run it like this:
+
+    ./check-debug-info -p <pid>
+
+The executable file associated with the process and all the .so files already loaded by the process will be checked for dwarf info.
+
+The process is not required to be nginx, but can be any user processes.
+
+Here is a complete example:
+
+    $ ./check-debug-info -p 26482
+    File /usr/lib64/ld-2.15.so has no debug info embedded.
+    File /usr/lib64/libc-2.15.so has no debug info embedded.
+    File /usr/lib64/libdl-2.15.so has no debug info embedded.
+    File /usr/lib64/libm-2.15.so has no debug info embedded.
+    File /usr/lib64/libpthread-2.15.so has no debug info embedded.
+    File /usr/lib64/libresolv-2.15.so has no debug info embedded.
+    File /usr/lib64/librt-2.15.so has no debug info embedded.
+
+For now, this tool does not support separate .debug files yet.
+
+ngx-phase-handlers
+------------------
+This tool dumps all the handlers registered by all the nginx modules for every nginx running phase in the order they actually run.
+
+This is very useful in debugging Nginx configuration issues caused by misinterpreting the running order of the Nginx configuration directives.
+
+Here is an example for an Nginx worker process with very few Nginx modules enabled:
+
+    # assuming the nginx worker pid is 4876
+    $ ./ngx-phase-handlers -p 4876
+    Tracing 4876 (/opt/nginx/sbin/nginx)...
+    pre-access phase
+        ngx_http_limit_req_handler
+        ngx_http_limit_conn_handler
+
+    content phase
+        ngx_http_index_handler
+        ngx_http_autoindex_handler
+        ngx_http_static_handler
+
+    log phase
+        ngx_http_log_handler
+
+    22 microseconds elapsed in the probe handler.
+
+Here is another example for an Nginx worker process with quite a few Nginx modules enabled:
+
+    $ ./ngx-phase-handlers -p 24980
+    Tracing 24980 (/opt/nginx/sbin/nginx)...
+    post-read phase
+        ngx_http_realip_handler
+
+    server-rewrite phase
+        ngx_coolkit_override_method_handler
+        ngx_http_rewrite_handler
+
+    rewrite phase
+        ngx_coolkit_override_method_handler
+        ngx_http_rewrite_handler
+
+    pre-access phase
+        ngx_http_realip_handler
+        ngx_http_limit_req_handler
+        ngx_http_limit_conn_handler
+
+    access phase
+        ngx_http_auth_request_handler
+        ngx_http_access_handler
+
+    content phase
+        ngx_http_lua_content_handler (request content handler)
+        ngx_http_index_handler
+        ngx_http_autoindex_handler
+        ngx_http_static_handler
+
+    log phase
+        ngx_http_log_handler
+
+    44 microseconds elapsed in the probe handler.
 
 Community
 =========
