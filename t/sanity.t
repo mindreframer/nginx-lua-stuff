@@ -5,7 +5,7 @@ use Test::Nginx::Socket;
 
 repeat_each(2);
 
-plan tests => repeat_each() * 110;
+plan tests => repeat_each() * 113;
 
 #master_on();
 #workers(2);
@@ -549,4 +549,20 @@ hi
 !pragma
 --- response_body
 hi
+
+
+
+=== TEST 33: HTTP 0.9 (set)
+--- config
+    location /foo {
+        more_set_headers 'X-Foo: howdy';
+        echo ok;
+    }
+--- raw_request eval
+"GET /foo\r\n"
+--- response_headers
+! X-Foo
+--- response_body
+ok
+--- http09
 
