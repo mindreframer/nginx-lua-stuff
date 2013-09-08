@@ -268,6 +268,10 @@ Examples for OpenResty:
       Aggregate REST API calls easily on a sandboxed Nginx+Lua env
        14 commits, last change: 2013-04-17 01:39:02, 30 stars, 1 forks
 
+    solso/insomnia:
+      Pause/resume traffic to your API (or Backend) using Nginx and Lua
+       2 commits, last change: 2013-07-19 04:20:19, 6 stars, 0 forks
+
     thattommyhall/nginx-lua-examples:
 
        7 commits, last change: 2013-03-19 12:09:06, 4 stars, 2 forks
