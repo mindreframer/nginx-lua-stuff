@@ -232,6 +232,10 @@ Examples for OpenResty:
       Lua MongoDB driver
        58 commits, last change: 2013-06-29 06:59:56, 0 stars, 0 forks
 
+    osmfj/tileman:
+      Renamed from tilecache to "tileman": please re-config your git repository. This is OpenStreetMap "Tile-cache" and "Tile-server" recipe with Nginx and embeded Lua. A backend is Tirex, mapnik and PostGIS.
+       275 commits, last change: 2013-09-08 01:58:43, 13 stars, 6 forks
+
     pgaertig/nginx-big-upload:
       Resumable and reliable file uploads of any size. Nginx extension written in Lua.
        26 commits, last change: 2013-07-13 04:32:04, 29 stars, 5 forks
