@@ -50,6 +50,7 @@ https://github.com/rebill/nginx-lua-in-action.git
 https://github.com/samalba/hipache-nginx.git
 https://github.com/seandong/ad-analytics.git
 https://github.com/solso/api-aggregator.git
+https://github.com/solso/insomnia.git
 https://github.com/thattommyhall/nginx-lua-examples.git
 https://github.com/torhve/Amatyr.git
 https://github.com/torhve/LuaWeb.git
@@ -57,4 +58,3 @@ https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
-https://github.com/solso/insomnia.git
