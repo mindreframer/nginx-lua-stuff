@@ -1,0 +1,24 @@
+Source: lua-nginx-osm
+Section: interpreters
+Priority: optional
+Maintainer: Hiroshi Miura <miurahr@osmf.jp>
+Build-Depends: debhelper (>= 8), dh-lua
+Standards-Version: 3.9.3
+Homepage: https://github.com/miurahr/lua-nginx-osm
+
+Package: lua-nginx-osm
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, nginx-extras, lua-bitop
+Recommends: tirex-core
+Suggests: tirex-example-map, tirex-backend-mapnik, tirex-backend-mapserver, 
+          tirex-backend-wms
+Description: Pure Lua openstreetmap utility for the nginx embedded Lua language
+ This modules provides a pure Lua openstreetmap utility for the
+ embedded nginx's Lua interpreter.
+ .
+ This includes (meta)tile utility, tirex driver and tile url utilities, which
+ make easy to build OpenStreetMap tile server with Nginx and Tirex.
+ .
+ Because this module is based on the ngx_lua's cosocket API, it inherits
+ the advantage of a real nonblocking behaviour running effectively on the
+ underlying nginx server ultra-fast technology design.

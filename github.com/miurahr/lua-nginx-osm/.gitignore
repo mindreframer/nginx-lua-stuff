@@ -1,0 +1,9 @@
+*.swp
+*.swo
+*~
+go
+reindex
+*.t_
+tags
+debian/trash
+debian/backup
