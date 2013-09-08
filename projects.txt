@@ -23,6 +23,7 @@ https://github.com/bakins/lua-resty-riak.git
 https://github.com/bakins/omnibus-nginx.git
 https://github.com/bakins/stardust.git
 https://github.com/benagricola/openresty-squiz-util.git
+https://github.com/bigplum/lua-resty-mongol.git
 https://github.com/bsm/fakengx.git
 https://github.com/chaoslawful/drizzle-nginx-module.git
 https://github.com/chaoslawful/lua-nginx-module.git
@@ -36,6 +37,7 @@ https://github.com/liseen/lua-resty-http.git
 https://github.com/medcl/lua-resty-weedfs.git
 https://github.com/mindreframer/github-auth-nginx.git
 https://github.com/observing/balancerbattle.git
+https://github.com/Olivine-Labs/resty-mongol.git
 https://github.com/pgaertig/nginx-big-upload.git
 https://github.com/pintsized/ledge.git
 https://github.com/samalba/hipache-nginx.git
@@ -48,5 +50,3 @@ https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
-https://github.com/Olivine-Labs/resty-mongol.git
-https://github.com/bigplum/lua-resty-mongol.git
