@@ -9,6 +9,7 @@ https://github.com/agentzh/lua-resty-mysql.git
 https://github.com/agentzh/lua-resty-redis.git
 https://github.com/agentzh/lua-resty-string.git
 https://github.com/agentzh/lua-resty-upload.git
+https://github.com/agentzh/lua-resty-websocket.git
 https://github.com/agentzh/memc-nginx-module.git
 https://github.com/agentzh/nginx-systemtap-toolkit.git
 https://github.com/agentzh/ngx_openresty.git
@@ -58,4 +59,3 @@ https://github.com/torhve/Nyfyk.git
 https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
-https://github.com/agentzh/lua-resty-websocket.git
