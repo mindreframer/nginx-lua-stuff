@@ -104,6 +104,10 @@ Examples for OpenResty:
       Streaming reader and parser for http file uploading based on ngx_lua cosocket
        45 commits, last change: 2013-03-24 22:27:20, 46 stars, 10 forks
 
+    agentzh/lua-resty-websocket:
+      WebSocket support for the ngx_lua module
+       31 commits, last change: 2013-09-14 21:03:53, 10 stars, 2 forks
+
     agentzh/memc-nginx-module:
       An extended version of the standard memcached module that supports set, add, delete, and many more memcached commands.
        209 commits, last change: 2013-09-02 23:36:29, 96 stars, 22 forks
