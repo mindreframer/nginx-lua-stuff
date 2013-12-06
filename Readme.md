@@ -240,7 +240,7 @@ Examples for OpenResty:
 
     observing/balancerbattle:
       WebSocket loadbalancer battle
-       53 commits, last change: 2013-05-24 01:27:01, 249 stars, 14 forks
+       53 commits, last change: 2013-05-24 01:27:01, 273 stars, 15 forks
 
     Olivine-Labs/resty-mongol:
       Lua MongoDB driver
