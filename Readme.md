@@ -210,6 +210,10 @@ Examples for OpenResty:
       Telize is a JSON IP and GeoIP REST API (IP Geolocation) built on Nginx and Lua
        2 commits, last change: 2013-08-25 23:18:26, 18 stars, 0 forks
 
+    FTBpro/count-von-count:
+      Counting Server
+       184 commits, last change: 2014-01-10 10:37:53, 11 stars, 0 forks
+
     garethr/nginx-json-proxy:
       An experiment with openresty, lua and nginx
        2 commits, last change: 2013-07-02 12:26:41, 1 stars, 1 forks
@@ -293,6 +297,10 @@ Examples for OpenResty:
     torhve/Nyfyk:
       HTML5 RSS Reader app. SQLite3+newsbeuter+openresty-backend
        38 commits, last change: , 0 stars, 0 forks
+
+    torhve/pix:
+      Photo gallery built with Lapis/Moonscript/Lua/PostgreSQL/Redis/Openresty/HTML5/Angular
+       273 commits, last change: , 3 stars, 0 forks
 
     wstucco/ssga.lua:
       Server Side Google Analytics in LUA
