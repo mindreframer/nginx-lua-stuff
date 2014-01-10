@@ -60,3 +60,4 @@ https://github.com/wstucco/ssga.lua.git
 https://github.com/xinqiyang/yagamiko.git
 https://github.com/yo2oneoo/lua-resty-httpclient.git
 https://github.com/torhve/pix.git
+https://github.com/FTBpro/count-von-count.git
